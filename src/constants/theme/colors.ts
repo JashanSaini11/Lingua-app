@@ -23,13 +23,6 @@ export const colors = {
   border: "#E5E7EB",
   surface: "#F6F7FB",
   background: "#FFFFFF",
-
-  // Speech bubbles (onboarding)
-  bubbleBlue: "#EAF3FF",
-  bubbleIndigo: "#F3F4FF",
-  bubbleIndigoText: "#3B30E0",
-  bubbleCoral: "#FDEEEA",
-  bubbleCoralText: "#E5483C",
 } as const;
 
 export type ColorName = keyof typeof colors;

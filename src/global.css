@@ -29,13 +29,6 @@
   --color-surface: #f6f7fb;
   --color-background: #ffffff;
 
-  /* Speech bubbles (onboarding) */
-  --color-bubble-blue: #eaf3ff;
-  --color-bubble-indigo: #f3f4ff;
-  --color-bubble-indigo-text: #3b30e0;
-  --color-bubble-coral: #fdeeea;
-  --color-bubble-coral-text: #e5483c;
-
   /* Font family: one family name per weight (custom fonts on native
      are loaded per file, so `font-bold` alone will not pick Poppins-Bold) */
   --font-poppins: "Poppins-Regular";
@@ -44,8 +37,6 @@
   --font-poppins-bold: "Poppins-Bold";
 
   /* Type scale: font size + line height (unitless) */
-  --text-display: 34px;
-  --text-display--line-height: 1.45;
   --text-h1: 32px;
   --text-h1--line-height: 1.2;
   --text-h2: 24px;
@@ -69,10 +60,6 @@
    Usage: <Text className="typography--h1 text-text-primary">
    Color is left to the caller so the same style works on any surface.
    ------------------------------------------------------------------ */
-.typography--display {
-  @apply font-poppins-bold text-display;
-}
-
 .typography--h1 {
   @apply font-poppins-bold text-h1;
 }
