@@ -19,6 +19,7 @@ export const fontFamily = {
 
 // Type scale from the design: size in px, unitless line height, font weight.
 export const typography = {
+  display: { fontSize: 34, lineHeight: 1.45, fontFamily: fontFamily.bold }, // Onboarding headline
   h1: { fontSize: 32, lineHeight: 1.2, fontFamily: fontFamily.bold }, // Page / Screen Title
   h2: { fontSize: 24, lineHeight: 1.3, fontFamily: fontFamily.semibold }, // Section Title
   h3: { fontSize: 20, lineHeight: 1.3, fontFamily: fontFamily.semibold }, // Card / Module Title
