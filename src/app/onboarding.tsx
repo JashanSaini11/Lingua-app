@@ -1,3 +1,4 @@
+import { useRouter } from "expo-router";
 import { useState } from "react";
 import { Image, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -6,6 +7,7 @@ import { SpeechBubble } from "@/components/SpeechBubble";
 import { images } from "@/constants/images";
 
 export default function Onboarding() {
+  const router = useRouter();
   // Size of the area reserved for the mascot (measured on layout).
   const [stage, setStage] = useState({ width: 0, height: 0 });
 
@@ -97,6 +99,7 @@ export default function Onboarding() {
         {/* Call to action */}
         <TouchableOpacity
           activeOpacity={0.85}
+          onPress={() => router.push("/sign-up")}
           className="mt-4 h-[76px] flex-row items-center justify-center rounded-[22px] bg-lingua-deep-purple pr-9"
         >
           <Text className="font-poppins-semibold text-h3 text-white">
