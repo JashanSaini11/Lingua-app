@@ -1,5 +1,9 @@
+<<<<<<< HEAD
 import { useAuth } from "@clerk/expo";
 import { Text, TouchableOpacity, View } from "react-native";
+=======
+import { Text, View } from "react-native";
+>>>>>>> ffa9db2c9b664e8007a8acd19bb396603d151182
 
 export default function Index() {
   const { signOut } = useAuth();
@@ -10,6 +14,7 @@ export default function Index() {
       <Text className="typography--body-md mt-2 text-text-secondary">
         Welcome to Lingua!
       </Text>
+<<<<<<< HEAD
    
       {/* Signing out sends the user back to onboarding. */}
       <TouchableOpacity
@@ -21,6 +26,8 @@ export default function Index() {
           Sign out
         </Text>
       </TouchableOpacity>
+=======
+>>>>>>> ffa9db2c9b664e8007a8acd19bb396603d151182
     </View>
   );
 }
