@@ -47,6 +47,7 @@ function RootNavigator() {
 
       <Stack.Protected guard={!!isSignedIn}>
         <Stack.Screen name="index" />
+        <Stack.Screen name="language" />
       </Stack.Protected>
     </Stack>
   );

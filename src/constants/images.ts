@@ -3,6 +3,8 @@
 
 import apple from "@/assets/images/apple.svg";
 import chevronBack from "@/assets/images/chevron-back.svg";
+import check from "@/assets/images/check.svg";
+import chevronForward from "@/assets/images/chevron-forward.svg";
 import close from "@/assets/images/close.svg";
 import earth from "@/assets/images/earth.png";
 import eye from "@/assets/images/eye.svg";
@@ -14,6 +16,7 @@ import mascotAuth from "@/assets/images/mascot-auth.png";
 import mascotWelcome from "@/assets/images/mascot-welcome.png";
 import mascotLogo from "@/assets/images/moscot-logo.png"; // file name has a typo ("moscot")
 import palace from "@/assets/images/palace.png";
+import search from "@/assets/images/search.svg";
 import sparkle from "@/assets/images/sparkle.svg";
 import sparkles from "@/assets/images/sparkles.svg";
 import streakFire from "@/assets/images/streak-fire.png";
@@ -21,7 +24,9 @@ import treasure from "@/assets/images/treasure.png";
 
 export const images = {
   apple,
+  check,
   chevronBack,
+  chevronForward,
   close,
   earth,
   eye,
@@ -33,6 +38,7 @@ export const images = {
   mascotWelcome,
   mascotLogo,
   palace,
+  search,
   sparkle,
   sparkles,
   streakFire,
