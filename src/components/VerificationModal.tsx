@@ -18,7 +18,7 @@ type VerificationModalProps = {
   email: string;
   onClose: () => void;
   // Called as soon as the last digit is entered
-  onVerified: () => void;
+  onSubmit: (code: string) => Promise<void>;
 };
 
 // Render this only while it should be shown (`{open && <VerificationModal />}`),
@@ -26,16 +26,23 @@ type VerificationModalProps = {
 export function VerificationModal({
   email,
   onClose,
-  onVerified,
+  onSubmit,
 }: VerificationModalProps) {
   const [code, setCode] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleChange = (text: string) => {
+  const handleChange = async (text: string) => {
+    if (submitting) return;
+
     const digits = text.replace(/\D/g, "").slice(0, CODE_LENGTH);
     setCode(digits);
 
     if (digits.length === CODE_LENGTH) {
-      onVerified();
+      setSubmitting(true);
+      await onSubmit(digits);
+      // Still here means the code was wrong, so let the user try again.
+      setSubmitting(false);
+      setCode("");
     }
   };
 
@@ -109,7 +116,7 @@ export function VerificationModal({
                   index === Math.min(code.length, CODE_LENGTH - 1);
 
                 return (
-                  <View
+                  <View 
                     key={index}
                     className={`h-full w-[14.5%] items-center justify-center rounded-2xl border-[1.5px] ${
                       isActive

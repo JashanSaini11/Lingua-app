@@ -14,8 +14,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { VerificationModal } from "@/components/VerificationModal";
 import { images } from "@/constants/images";
-
-type AuthMode = "sign-up" | "sign-in";
+import { type AuthMode, useAuthFlow } from "@/hooks/useAuthFlow";
 
 // Only the copy changes between the two screens.
 const copy = {
@@ -38,10 +37,9 @@ const copy = {
 } as const;
 
 const socialProviders = [
-  { name: "Google", icon: images.google },
-  { name: "Facebook", icon: images.facebook },
-  { name: "Apple", icon: images.apple },
-];
+  { name: "Google", icon: images.google, strategy: "oauth_google" },
+  { name: "Apple", icon: images.apple, strategy: "oauth_apple" },
+] as const;
 
 
 const MASCOT_WIDTH_RATIO = 0.55; // picture size / screen width
@@ -57,6 +55,7 @@ export function AuthScreen({ mode }: { mode: AuthMode }) {
   const router = useRouter();
   const { width } = useWindowDimensions();
   const text = copy[mode];
+  const { loading, start, verify, signInWithSocial } = useAuthFlow(mode);
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -73,9 +72,16 @@ export function AuthScreen({ mode }: { mode: AuthMode }) {
     }
   };
 
-  const handleVerified = () => {
-    setVerifying(false);
-    router.replace("/");
+  // Sends the code, then opens the code modal.
+  const handleSubmit = async () => {
+    if (await start(email.trim(), password)) {
+      setVerifying(true);
+    }
+  };
+
+  // On success the home route opens, so the modal only needs to stay for errors.
+  const handleCode = async (code: string) => {
+    await verify(code);
   };
 
   return (
@@ -205,7 +211,8 @@ export function AuthScreen({ mode }: { mode: AuthMode }) {
             {/* Main button */}
             <TouchableOpacity
               activeOpacity={0.85}
-              onPress={() => setVerifying(true)}
+              onPress={handleSubmit}
+              disabled={loading}
               className="mt-5 h-[60px] items-center justify-center rounded-[18px] bg-lingua-deep-purple"
             >
               <Text className="font-poppins-semibold text-[18px] text-white">
@@ -222,12 +229,14 @@ export function AuthScreen({ mode }: { mode: AuthMode }) {
               <View className="h-px flex-1 bg-border" />
             </View>
 
-            {/* Social buttons (UI only for now) */}
+            {/* Social buttons */}
             <View className="mt-4 gap-2.5">
               {socialProviders.map((provider) => (
                 <TouchableOpacity
                   key={provider.name}
                   activeOpacity={0.7}
+                  onPress={() => signInWithSocial(provider.strategy)}
+                  disabled={loading}
                   className="h-14 flex-row items-center rounded-[18px] border border-border bg-white pl-[39px]"
                 >
                   <Image
@@ -260,9 +269,12 @@ export function AuthScreen({ mode }: { mode: AuthMode }) {
         <VerificationModal
           email={email}
           onClose={() => setVerifying(false)}
-          onVerified={handleVerified}
+          onSubmit={handleCode}
         />
       )}
+
+      {/* Clerk needs this on web to show its bot check. It is invisible on mobile. */}
+      {mode === "sign-up" && <View nativeID="clerk-captcha" />}
     </SafeAreaView>
   );
 }
