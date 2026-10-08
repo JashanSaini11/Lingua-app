@@ -10,6 +10,7 @@ export type Language = {
   flagUrl: string; // from getFlagUrl() in lib/flags.ts
   learners: string; // shown on the language screen, e.g. "28.4M learners"
   greeting: string; // "¡Hola!"
+  hello: string; // "Hola" (no punctuation, used in "Hola, Alex!")
   teacherName: string; // AI teacher shown in video/audio/chat lessons
 };
 
@@ -74,6 +75,17 @@ export type Activity =
 export type AiTeacherPrompt = {
   openingLine: string; // first thing the teacher says
   instructions: string; // system-style prompt for the Vision Agent
+};
+
+// One row of "Today's plan" on the home screen.
+export type PlanItemKind = "lesson" | "conversation" | "words";
+
+export type PlanItem = {
+  id: string;
+  kind: PlanItemKind; // decides the icon and its color
+  title: string;
+  subtitle: string;
+  done: boolean;
 };
 
 export type Lesson = {

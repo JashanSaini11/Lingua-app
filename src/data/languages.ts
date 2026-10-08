@@ -9,6 +9,7 @@ export const languages: Language[] = [
     flagUrl: getFlagUrl("es"),
     learners: "28.4M learners",
     greeting: "¡Hola!",
+    hello: "Hola",
     teacherName: "Sofía",
   },
   {
@@ -18,6 +19,7 @@ export const languages: Language[] = [
     flagUrl: getFlagUrl("fr"),
     learners: "19.4M learners",
     greeting: "Bonjour !",
+    hello: "Bonjour",
     teacherName: "Camille",
   },
   {
@@ -27,6 +29,7 @@ export const languages: Language[] = [
     flagUrl: getFlagUrl("ja"),
     learners: "12.7M learners",
     greeting: "こんにちは！",
+    hello: "こんにちは",
     teacherName: "Yuki",
   },
   {
@@ -36,6 +39,7 @@ export const languages: Language[] = [
     flagUrl: getFlagUrl("en"),
     learners: "35.2M learners",
     greeting: "Hello!",
+    hello: "Hello",
     teacherName: "Emma",
   },
 ];

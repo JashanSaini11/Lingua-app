@@ -36,6 +36,11 @@
   --color-bubble-coral: #fdeeea;
   --color-bubble-coral-text: #e5483c;
 
+  /* Home screen */
+  --color-goal-card: #fff3e6;
+  --color-goal-track: #fbe5cc;
+  --color-coral: #f26d6d;
+
   /* Font family: one family name per weight (custom fonts on native
      are loaded per file, so `font-bold` alone will not pick Poppins-Bold) */
   --font-poppins: "Poppins-Regular";
@@ -115,4 +120,47 @@
 
 .language-card--selected {
   @apply border-lingua-purple bg-[#f5f3ff];
+}
+
+/* ------------------------------------------------------------------
+   Home card (BEM): block `home-card`, one modifier per card color.
+   ------------------------------------------------------------------ */
+.home-card {
+  @apply overflow-hidden rounded-[24px];
+}
+
+.home-card--goal {
+  @apply bg-goal-card;
+}
+
+.home-card--continue {
+  @apply bg-lingua-deep-purple;
+}
+
+/* ------------------------------------------------------------------
+   Plan item (BEM): one row of "Today's plan".
+   Elements: `__icon` (colored square) and `__check` (right circle).
+   ------------------------------------------------------------------ */
+.plan-item {
+  @apply h-[67px] flex-row items-center;
+}
+
+.plan-item__icon {
+  @apply size-10 items-center justify-center rounded-xl;
+}
+
+.plan-item__icon--purple {
+  @apply bg-lingua-deep-purple;
+}
+
+.plan-item__icon--coral {
+  @apply bg-coral;
+}
+
+.plan-item__check {
+  @apply mr-3 size-6 items-center justify-center rounded-full border-2 border-[#9ca3af];
+}
+
+.plan-item__check--done {
+  @apply border-lingua-deep-purple bg-lingua-deep-purple;
 }
