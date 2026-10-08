@@ -23,30 +23,35 @@ export default function Onboarding() {
         <View className="flex-row items-center justify-center">
           <Image
             source={images.mascotLogo}
-            className="size-[72px]"
+            className="size-[80px]"
             resizeMode="contain"
           />
-          <Text className="-ml-2 font-poppins-semibold text-[28px] text-text-primary">
+          <Text className="font-poppins-semibold text-[30px] text-text-primary">
             lingua
           </Text>
         </View>
 
         {/* Headline + subtitle */}
-        <View className="mt-4 pl-3">
+        <View className="mt-6 pl-3">
+          {/* One line only: shrink a little on narrow screens instead of
+              cutting the text, and ignore the phone's font size setting. */}
           <Text
             className="typography--display text-text-primary"
             numberOfLines={1}
             adjustsFontSizeToFit
+            minimumFontScale={0.7}
+            maxFontSizeMultiplier={1}
           >
             Your AI language
           </Text>
           <Text
             className="typography--display text-text-primary"
             numberOfLines={1}
+            maxFontSizeMultiplier={1}
           >
             <Text className="text-lingua-deep-purple">teacher</Text>.
           </Text>
-          <Text className="font-poppins text-[14px] leading-[25px] text-text-secondary">
+          <Text className="mt-1.5 font-poppins text-[14px] leading-[28px] text-text-secondary">
             {"Real conversations, personalized\nlessons, anytime, anywhere."}
           </Text>
         </View>
@@ -100,7 +105,7 @@ export default function Onboarding() {
         <TouchableOpacity
           activeOpacity={0.85}
           onPress={() => router.push("/sign-up")}
-          className="mt-4 h-[76px] flex-row items-center justify-center rounded-[22px] bg-lingua-deep-purple pr-9"
+          className="mt-4 h-20 flex-row items-center justify-center rounded-[24px] bg-lingua-deep-purple pr-9"
         >
           <Text className="font-poppins-semibold text-h3 text-white">
             Get Started
