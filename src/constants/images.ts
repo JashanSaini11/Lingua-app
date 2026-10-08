@@ -20,6 +20,11 @@ import search from "@/assets/images/search.svg";
 import sparkle from "@/assets/images/sparkle.svg";
 import sparkles from "@/assets/images/sparkles.svg";
 import streakFire from "@/assets/images/streak-fire.png";
+import tabAiTeacher from "@/assets/images/tab-ai-teacher.svg";
+import tabChat from "@/assets/images/tab-chat.svg";
+import tabHome from "@/assets/images/tab-home.svg";
+import tabLearn from "@/assets/images/tab-learn.svg";
+import tabProfile from "@/assets/images/tab-profile.svg";
 import treasure from "@/assets/images/treasure.png";
 
 export const images = {
@@ -42,5 +47,10 @@ export const images = {
   sparkle,
   sparkles,
   streakFire,
+  tabAiTeacher,
+  tabChat,
+  tabHome,
+  tabLearn,
+  tabProfile,
   treasure,
 };
