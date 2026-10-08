@@ -25,8 +25,8 @@ export function SpeechBubble({
       <View
         className={`absolute -bottom-1.5 size-4 rotate-45 ${tailPosition} ${bubbleClassName}`}
       />
-      <View className={`rounded-2xl px-5 py-4 ${bubbleClassName}`}>
-        <Text className={`font-poppins-semibold text-h4 ${textClassName}`}>
+      <View className={`rounded-[20px] px-[22px] py-[17px] ${bubbleClassName}`}>
+        <Text className={`font-poppins-medium text-h3 ${textClassName}`}>
           {text}
         </Text>
       </View>
