@@ -1,85 +1,109 @@
-import { useAuth } from "@clerk/expo";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useUser } from "@clerk/expo";
 import { Image } from "expo-image";
-import { Link } from "expo-router";
-import { Text, TouchableOpacity, View } from "react-native";
+import { Link, useRouter } from "expo-router";
+import { ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
+import { ContinueLearningCard } from "@/components/ContinueLearningCard";
+import { DailyGoalCard } from "@/components/DailyGoalCard";
+import { PlanItemRow } from "@/components/PlanItemRow";
+import { images } from "@/constants/images";
+import { colors } from "@/constants/theme";
 import { getLanguageByCode } from "@/data/languages";
+import { getHomeContent } from "@/lib/home";
 import { useLanguageStore } from "@/store/useLanguageStore";
+import { useProgressStore } from "@/store/useProgressStore";
 
-export default function Index() {
-  const { signOut } = useAuth();
+export default function HomeScreen() {
+  const router = useRouter();
+  const { user } = useUser();
   const selectedLanguage = useLanguageStore((state) => state.selectedLanguage);
+  const { xp, dailyGoalXp, streakDays, level, completedLessonIds } =
+    useProgressStore();
 
   const language = selectedLanguage
     ? getLanguageByCode(selectedLanguage)
     : undefined;
 
-  // Testing only: forget the saved language. The tabs layout then sends us
-  // back to the language screen because `selectedLanguage` is empty again.
-  const clearStorage = async () => {
-    // Reset the store first, then wipe AsyncStorage so the empty value
-    // the store just saved is removed as well.
-    useLanguageStore.setState({ selectedLanguage: null });
-    await AsyncStorage.clear();
-  };
+  // The tabs layout already sends users without a language to /language.
+  if (!language) {
+    return null;
+  }
+
+  const { unitNumber, plan } = getHomeContent(
+    language,
+    completedLessonIds,
+  );
 
   return (
-    <View className="flex-1 items-center justify-center bg-background px-6">
-      <Text className="typography--h1 text-lingua-purple">lingua</Text>
-      <Text className="typography--body-md mt-2 text-text-secondary">
-        Welcome to Lingua!
-      </Text>
-
-      {language && (
-        <View className="mt-6 flex-row items-center">
-          <Image
-            source={{ uri: language.flagUrl }}
-            contentFit="cover"
-            style={{ width: 44, height: 44, borderRadius: 22 }}
-          />
-          <View className="ml-4">
-            <Text className="font-poppins text-body-sm text-text-secondary">
-              You are learning
-            </Text>
-            <Text className="font-poppins-medium text-h4 text-text-primary">
-              {language.name} {language.greeting}
-            </Text>
-          </View>
-        </View>
-      )}
-
-      <Link href="/language" asChild>
-        <TouchableOpacity
-          activeOpacity={0.85}
-          className="mt-8 h-14 items-center justify-center rounded-2xl border border-lingua-deep-purple px-8"
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
+      <SafeAreaView edges={["top"]} style={{ flex: 1 }}>
+        <ScrollView
+          contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 24 }}
+          showsVerticalScrollIndicator={false}
         >
-          <Text className="font-poppins-semibold text-h4 text-lingua-deep-purple">
-            Choose a language
-          </Text>
-        </TouchableOpacity>
-      </Link>
+          {/* Header: flag (opens language picker), greeting, streak, bell */}
+          <View className="mt-3 h-11 flex-row items-center">
+            <Link href="/language" asChild>
+              <TouchableOpacity activeOpacity={0.8}>
+                <Image
+                  source={{ uri: language.flagUrl }}
+                  contentFit="cover"
+                  style={{ width: 36, height: 36, borderRadius: 18 }}
+                />
+              </TouchableOpacity>
+            </Link>
 
-      <TouchableOpacity
-        activeOpacity={0.85}
-        onPress={clearStorage}
-        className="mt-4 h-14 items-center justify-center rounded-2xl border border-lingua-deep-purple px-8"
-      >
-        <Text className="font-poppins-semibold text-h4 text-lingua-deep-purple">
-          Clear storage (test)
-        </Text>
-      </TouchableOpacity>
+            <Text className="ml-3 flex-1 font-poppins-semibold text-h4 text-text-primary">
+              {language.hello}, {user?.firstName ?? "friend"}! 👋
+            </Text>
 
-      {/* Signing out sends the user back to onboarding. */}
-      <TouchableOpacity
-        activeOpacity={0.85}
-        onPress={() => signOut()}
-        className="mt-8 h-14 items-center justify-center rounded-2xl bg-lingua-deep-purple px-8"
-      >
-        <Text className="font-poppins-semibold text-h4 text-white">
-          Sign out
-        </Text>
-      </TouchableOpacity>
+            <Image
+              source={images.streakFire}
+              style={{ width: 28, height: 28 }}
+            />
+            <Text className="ml-2 font-poppins-medium text-h4 text-text-primary">
+              {streakDays}
+            </Text>
+            <Image
+              source={images.bell}
+              tintColor={colors.textPrimary}
+              style={{ width: 26, height: 26, marginLeft: 22 }}
+            />
+          </View>
+
+          <DailyGoalCard xp={xp} target={dailyGoalXp} />
+
+          <ContinueLearningCard
+            languageName={language.name}
+            level={level}
+            unitNumber={unitNumber}
+            onContinue={() => router.push("/learn")}
+          />
+
+          {/* Today's plan */}
+          {plan.length > 0 && (
+            <>
+              <View className="mb-3 mt-6 flex-row items-center justify-between">
+                <Text className="font-poppins-semibold text-h4 text-text-primary">
+                  Today&apos;s plan
+                </Text>
+                <Link href="/learn" asChild>
+                  <TouchableOpacity activeOpacity={0.6}>
+                    <Text className="font-poppins-semibold text-h4 text-lingua-deep-purple">
+                      View all
+                    </Text>
+                  </TouchableOpacity>
+                </Link>
+              </View>
+
+              {plan.map((item) => (
+                <PlanItemRow key={item.id} item={item} />
+              ))}
+            </>
+          )}
+        </ScrollView>
+      </SafeAreaView>
     </View>
   );
 }

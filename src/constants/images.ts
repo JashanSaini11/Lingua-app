@@ -2,6 +2,7 @@
 // Always use images through this object: <Image source={images.mascotWelcome} />
 
 import apple from "@/assets/images/apple.svg";
+import bell from "@/assets/images/bell.svg";
 import chevronBack from "@/assets/images/chevron-back.svg";
 import check from "@/assets/images/check.svg";
 import chevronForward from "@/assets/images/chevron-forward.svg";
@@ -11,6 +12,7 @@ import eye from "@/assets/images/eye.svg";
 import eyeOff from "@/assets/images/eye-off.svg";
 import facebook from "@/assets/images/facebook.svg";
 import google from "@/assets/images/google.svg";
+import headphones from "@/assets/images/headphones.svg";
 import mail from "@/assets/images/mail.svg";
 import mascotAuth from "@/assets/images/mascot-auth.png";
 import mascotWelcome from "@/assets/images/mascot-welcome.png";
@@ -26,9 +28,11 @@ import tabHome from "@/assets/images/tab-home.svg";
 import tabLearn from "@/assets/images/tab-learn.svg";
 import tabProfile from "@/assets/images/tab-profile.svg";
 import treasure from "@/assets/images/treasure.png";
+import words from "@/assets/images/words.svg";
 
 export const images = {
   apple,
+  bell,
   check,
   chevronBack,
   chevronForward,
@@ -38,6 +42,7 @@ export const images = {
   eyeOff,
   facebook,
   google,
+  headphones,
   mail,
   mascotAuth,
   mascotWelcome,
@@ -53,4 +58,5 @@ export const images = {
   tabLearn,
   tabProfile,
   treasure,
+  words,
 };

@@ -30,6 +30,11 @@ export const colors = {
   bubbleIndigoText: "#3B30E0",
   bubbleCoral: "#FDEEEA",
   bubbleCoralText: "#E5483C",
+
+  // Home screen
+  goalCard: "#FFF3E6",
+  goalTrack: "#FBE5CC",
+  coral: "#F26D6D",
 } as const;
 
 export type ColorName = keyof typeof colors;
