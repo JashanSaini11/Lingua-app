@@ -13,14 +13,20 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { images } from "@/constants/images";
 import { languages } from "@/data/languages";
+import { useLanguageStore } from "@/store/useLanguageStore";
 import type { LanguageCode } from "@/types/learning";
 
 export default function LanguageScreen() {
   const router = useRouter();
   const { width } = useWindowDimensions();
   const [search, setSearch] = useState("");
-  // Local for now. A Zustand store will keep the chosen language later.
-  const [selected, setSelected] = useState<LanguageCode>("es");
+  const savedLanguage = useLanguageStore((state) => state.selectedLanguage);
+  const setSelectedLanguage = useLanguageStore(
+    (state) => state.setSelectedLanguage,
+  );
+  // Highlights the saved language, or Spanish when nothing is saved yet.
+  // The choice is only saved when the user presses Confirm.
+  const [selected, setSelected] = useState<LanguageCode>(savedLanguage ?? "es");
 
   const query = search.trim().toLowerCase();
   const visibleLanguages = languages.filter(
@@ -35,6 +41,11 @@ export default function LanguageScreen() {
     } else {
       router.replace("/");
     }
+  };
+
+  const confirm = () => {
+    setSelectedLanguage(selected);
+    goBack();
   };
 
   return (
@@ -137,7 +148,7 @@ export default function LanguageScreen() {
             {/* Confirm */}
             <TouchableOpacity
               activeOpacity={0.85}
-              onPress={goBack}
+              onPress={confirm}
               className="mt-2 h-14 items-center justify-center rounded-[18px] bg-lingua-deep-purple"
             >
               <Text className="font-poppins-semibold text-h4 text-white">

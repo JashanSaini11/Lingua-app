@@ -8,6 +8,7 @@ import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
 
 import { fontAssets } from "@/constants/theme";
+import { useLanguageStore } from "@/store/useLanguageStore";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -21,8 +22,10 @@ function RootNavigator() {
   const [fontsLoaded, fontError] = useFonts(fontAssets);
   // isLoaded turns true once Clerk has restored the saved session.
   const { isLoaded, isSignedIn } = useAuth();
+  // The saved language is read from AsyncStorage, so we wait for it too.
+  const hasHydrated = useLanguageStore((state) => state.hasHydrated);
 
-  const ready = (fontsLoaded || fontError) && isLoaded;
+  const ready = (fontsLoaded || fontError) && isLoaded && hasHydrated;
 
   useEffect(() => {
     if (ready) {
@@ -46,7 +49,7 @@ function RootNavigator() {
       </Stack.Protected>
 
       <Stack.Protected guard={!!isSignedIn}>
-        <Stack.Screen name="index" />
+        <Stack.Screen name="(tabs)" />
         <Stack.Screen name="language" />
       </Stack.Protected>
     </Stack>
