@@ -10,6 +10,8 @@ type ProgressState = {
   completedLessonIds: string[];
   // Saves a finished lesson and adds its XP. Does nothing if already done.
   completeLesson: (lessonId: string, xpReward: number) => void;
+  // Adds XP that is not tied to a lesson, like a finished practice session.
+  addXp: (amount: number) => void;
 };
 
 export const useProgressStore = create<ProgressState>()(
@@ -29,6 +31,7 @@ export const useProgressStore = create<ProgressState>()(
                 completedLessonIds: [...state.completedLessonIds, lessonId],
               },
         ),
+      addXp: (amount) => set((state) => ({ xp: state.xp + amount })),
     }),
     {
       name: "progress-storage",

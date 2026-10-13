@@ -1,3 +1,4 @@
+import { getPlaceholderImage } from "@/lib/placeholder";
 import type { LanguageCode, Unit } from "@/types/learning";
 
 export const units: Unit[] = [
@@ -8,6 +9,7 @@ export const units: Unit[] = [
     order: 1,
     title: "Hello, Spanish!",
     emoji: "👋",
+    image: getPlaceholderImage("es-unit-1", 800, 400),
     description: "Greet people and introduce yourself.",
   },
   {
@@ -16,6 +18,7 @@ export const units: Unit[] = [
     order: 2,
     title: "Food & Drinks",
     emoji: "🌮",
+    image: getPlaceholderImage("es-unit-2", 800, 400),
     description: "Order a snack and a drink at a café.",
   },
 
@@ -26,6 +29,7 @@ export const units: Unit[] = [
     order: 1,
     title: "Bonjour, France!",
     emoji: "🗼",
+    image: getPlaceholderImage("fr-unit-1", 800, 400),
     description: "Say hello and be polite.",
   },
 
@@ -36,7 +40,19 @@ export const units: Unit[] = [
     order: 1,
     title: "Konnichiwa!",
     emoji: "🌸",
+    image: getPlaceholderImage("ja-unit-1", 800, 400),
     description: "Greet people and say thank you.",
+  },
+
+  // English
+  {
+    id: "en-unit-1",
+    languageCode: "en",
+    order: 1,
+    title: "Hello, English!",
+    emoji: "👋",
+    image: getPlaceholderImage("en-unit-1", 800, 400),
+    description: "Greet people and handle everyday situations.",
   },
 ];
 

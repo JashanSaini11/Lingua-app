@@ -1,3 +1,4 @@
+import { getPlaceholderImage } from "@/lib/placeholder";
 import type { Lesson, LanguageCode } from "@/types/learning";
 
 // Small beginner sample. To add a lesson, copy one below, give it a new id,
@@ -11,6 +12,7 @@ export const lessons: Lesson[] = [
     order: 1,
     title: "Greetings",
     emoji: "👋",
+    image: getPlaceholderImage("es-1-1"),
     description: "Say hello and goodbye like a local.",
     type: "video",
     xpReward: 10,
@@ -75,6 +77,7 @@ export const lessons: Lesson[] = [
     order: 2,
     title: "Introduce Yourself",
     emoji: "🙋",
+    image: getPlaceholderImage("es-1-2"),
     description: "Tell people your name and ask theirs.",
     type: "audio",
     xpReward: 15,
@@ -133,6 +136,7 @@ export const lessons: Lesson[] = [
     order: 1,
     title: "At the Café",
     emoji: "☕",
+    image: getPlaceholderImage("es-2-1"),
     description: "Order a drink and a snack politely.",
     type: "chat",
     xpReward: 15,
@@ -190,6 +194,7 @@ export const lessons: Lesson[] = [
     order: 2,
     title: "Food Review",
     emoji: "🍎",
+    image: getPlaceholderImage("es-2-2"),
     description: "Practice the food words you have learned.",
     type: "review",
     xpReward: 10,
@@ -246,6 +251,7 @@ export const lessons: Lesson[] = [
     order: 1,
     title: "Saying Hello",
     emoji: "🥐",
+    image: getPlaceholderImage("fr-1-1"),
     description: "Greet people in French.",
     type: "video",
     xpReward: 10,
@@ -302,6 +308,7 @@ export const lessons: Lesson[] = [
     order: 2,
     title: "Being Polite",
     emoji: "🙏",
+    image: getPlaceholderImage("fr-1-2"),
     description: "Say please, thank you, and excuse me.",
     type: "audio",
     xpReward: 10,
@@ -350,6 +357,7 @@ export const lessons: Lesson[] = [
     order: 1,
     title: "Greetings",
     emoji: "🎌",
+    image: getPlaceholderImage("ja-1-1"),
     description: "Say hello and goodbye in Japanese.",
     type: "video",
     xpReward: 10,
@@ -407,6 +415,7 @@ export const lessons: Lesson[] = [
     order: 2,
     title: "Thank You",
     emoji: "💐",
+    image: getPlaceholderImage("ja-1-2"),
     description: "Learn to say thanks and you're welcome.",
     type: "audio",
     xpReward: 10,
@@ -446,6 +455,340 @@ export const lessons: Lesson[] = [
         "Teach ありがとう, どういたしまして, すみません and ありがとうございます. Always say the romaji too. " +
         "Run a short role-play: you hand the learner something and they thank you, then you reply どういたしまして. " +
         "Speak slowly, repeat key words twice, and keep replies to one or two sentences.",
+    },
+  },
+
+  // ───────────── English · Unit 1: Hello, English! ─────────────
+  // For English, `translation` is a simple meaning in plain English.
+  {
+    id: "en-1-1",
+    unitId: "en-unit-1",
+    languageCode: "en",
+    order: 1,
+    title: "Greetings & Introductions",
+    emoji: "👋",
+    image: getPlaceholderImage("en-1-1"),
+    description: "Say hello and tell people your name.",
+    type: "video",
+    xpReward: 10,
+    estimatedMinutes: 5,
+    goals: [
+      "Say hello and goodbye",
+      "Tell someone your name",
+      "Say you are happy to meet them",
+    ],
+    vocabulary: [
+      { id: "en-1-1-v1", emoji: "👋", word: "hello", translation: "a friendly greeting", pronunciation: "heh-LOH" },
+      { id: "en-1-1-v2", emoji: "🚶", word: "goodbye", translation: "said when you leave", pronunciation: "good-BY" },
+      { id: "en-1-1-v3", emoji: "🤝", word: "nice to meet you", translation: "said when you meet someone new", pronunciation: "nyss too MEET yoo" },
+    ],
+    phrases: [
+      { id: "en-1-1-p1", text: "My name is Sam.", translation: "Tell someone your name.", pronunciation: "my NAYM iz sam" },
+    ],
+    activities: [
+      {
+        id: "en-1-1-a1",
+        type: "multiple-choice",
+        prompt: "Which word do you say when you meet someone?",
+        options: ["goodbye", "hello", "sorry", "please"],
+        correctAnswer: "hello",
+      },
+      {
+        id: "en-1-1-a2",
+        type: "translation",
+        prompt: "Say your name: Sam",
+        answer: "My name is Sam.",
+      },
+      {
+        id: "en-1-1-a3",
+        type: "speaking",
+        prompt: "Say this out loud:",
+        targetText: "Nice to meet you.",
+        translation: "Said when you meet someone new.",
+      },
+    ],
+    aiTeacher: {
+      openingLine: "Hi! I'm Emma, your English teacher. Ready to learn greetings?",
+      instructions:
+        "You are Emma, a warm and patient English teacher on a live video call with a complete beginner. " +
+        "Teach hello, goodbye and nice to meet you, then practice 'My name is ...'. " +
+        "Speak slowly, ask the learner to repeat each phrase, and keep every reply under two sentences. Celebrate small wins.",
+    },
+  },
+  {
+    id: "en-1-2",
+    unitId: "en-unit-1",
+    languageCode: "en",
+    order: 2,
+    title: "Daily Life",
+    emoji: "🏠",
+    image: getPlaceholderImage("en-1-2"),
+    description: "Talk about your day at home and at work.",
+    type: "audio",
+    xpReward: 15,
+    estimatedMinutes: 6,
+    goals: [
+      "Name common daily activities",
+      "Say what you do in the morning",
+      "Ask someone about their day",
+    ],
+    vocabulary: [
+      { id: "en-1-2-v1", emoji: "⏰", word: "wake up", translation: "stop sleeping", pronunciation: "wayk UP" },
+      { id: "en-1-2-v2", emoji: "🍳", word: "breakfast", translation: "the first meal of the day", pronunciation: "BREK-fust" },
+      { id: "en-1-2-v3", emoji: "💼", word: "work", translation: "the job you do", pronunciation: "wurk" },
+    ],
+    phrases: [
+      { id: "en-1-2-p1", text: "I wake up at seven.", translation: "Say when your day starts.", pronunciation: "eye wayk UP at SEV-un" },
+      { id: "en-1-2-p2", text: "How was your day?", translation: "Ask about someone's day.", pronunciation: "how wuz yor DAY" },
+    ],
+    activities: [
+      {
+        id: "en-1-2-a1",
+        type: "multiple-choice",
+        prompt: "What is the first meal of the day?",
+        options: ["dinner", "lunch", "breakfast", "snack"],
+        correctAnswer: "breakfast",
+      },
+      {
+        id: "en-1-2-a2",
+        type: "translation",
+        prompt: "Say when you wake up: 7:00",
+        answer: "I wake up at seven.",
+      },
+      {
+        id: "en-1-2-a3",
+        type: "speaking",
+        prompt: "Ask about someone's day:",
+        targetText: "How was your day?",
+        translation: "Ask about someone's day.",
+      },
+    ],
+    aiTeacher: {
+      openingLine: "Hello again! Today we will talk about our daily routine. Listen first, then repeat after me.",
+      instructions:
+        "You are Emma, a friendly English teacher in an audio-only lesson with a beginner. " +
+        "Teach 'wake up', 'breakfast' and 'work', then ask the learner what they do in the morning. " +
+        "Describe nothing visual. Speak slowly, repeat key phrases twice, and keep replies to one or two sentences.",
+    },
+  },
+  {
+    id: "en-1-3",
+    unitId: "en-unit-1",
+    languageCode: "en",
+    order: 3,
+    title: "At the Café",
+    emoji: "☕",
+    image: getPlaceholderImage("en-1-3"),
+    description: "Order a drink and a snack politely.",
+    type: "chat",
+    xpReward: 15,
+    estimatedMinutes: 7,
+    goals: [
+      "Name common foods and drinks",
+      "Order something politely",
+      "Ask for the bill",
+    ],
+    vocabulary: [
+      { id: "en-1-3-v1", emoji: "☕", word: "coffee", translation: "a hot brown drink", pronunciation: "KOF-ee" },
+      { id: "en-1-3-v2", emoji: "🥪", word: "sandwich", translation: "food between two slices of bread", pronunciation: "SAND-wich" },
+      { id: "en-1-3-v3", emoji: "🙏", word: "please", translation: "a polite word when you ask", pronunciation: "pleez" },
+    ],
+    phrases: [
+      { id: "en-1-3-p1", text: "Can I have a coffee, please?", translation: "Order a drink politely.", pronunciation: "kan eye hav a KOF-ee pleez" },
+      { id: "en-1-3-p2", text: "The bill, please.", translation: "Ask to pay.", pronunciation: "thuh BIL pleez" },
+    ],
+    activities: [
+      {
+        id: "en-1-3-a1",
+        type: "multiple-choice",
+        prompt: "Which word makes your order polite?",
+        options: ["now", "please", "give", "fast"],
+        correctAnswer: "please",
+      },
+      {
+        id: "en-1-3-a2",
+        type: "translation",
+        prompt: "Order a coffee politely.",
+        answer: "Can I have a coffee, please?",
+      },
+      {
+        id: "en-1-3-a3",
+        type: "speaking",
+        prompt: "Ask to pay:",
+        targetText: "The bill, please.",
+        translation: "Ask to pay.",
+      },
+    ],
+    aiTeacher: {
+      openingLine: "Welcome to the café! I'm the waiter today. What would you like to order?",
+      instructions:
+        "You are Emma, playing a friendly café waiter in a chat with an English beginner. " +
+        "Practice 'Can I have a coffee, please?' and 'The bill, please.' Keep replies short, correct mistakes kindly, and give one new word per turn.",
+    },
+  },
+  {
+    id: "en-1-4",
+    unitId: "en-unit-1",
+    languageCode: "en",
+    order: 4,
+    title: "Travel & Directions",
+    emoji: "🧭",
+    image: getPlaceholderImage("en-1-4"),
+    description: "Ask where things are and understand the answer.",
+    type: "video",
+    xpReward: 15,
+    estimatedMinutes: 7,
+    goals: [
+      "Ask where a place is",
+      "Understand left, right and straight",
+      "Thank someone for their help",
+    ],
+    vocabulary: [
+      { id: "en-1-4-v1", emoji: "⬅️", word: "left", translation: "the opposite of right", pronunciation: "left" },
+      { id: "en-1-4-v2", emoji: "➡️", word: "right", translation: "the opposite of left", pronunciation: "ryt" },
+      { id: "en-1-4-v3", emoji: "🚉", word: "station", translation: "where trains and buses stop", pronunciation: "STAY-shun" },
+    ],
+    phrases: [
+      { id: "en-1-4-p1", text: "Where is the station?", translation: "Ask for a place.", pronunciation: "wair iz thuh STAY-shun" },
+      { id: "en-1-4-p2", text: "Turn left, then go straight.", translation: "Directions you can hear.", pronunciation: "turn LEFT then goh STRAYT" },
+    ],
+    activities: [
+      {
+        id: "en-1-4-a1",
+        type: "multiple-choice",
+        prompt: "Which word is the opposite of “left”?",
+        options: ["up", "down", "right", "near"],
+        correctAnswer: "right",
+      },
+      {
+        id: "en-1-4-a2",
+        type: "translation",
+        prompt: "Ask where the station is.",
+        answer: "Where is the station?",
+      },
+      {
+        id: "en-1-4-a3",
+        type: "speaking",
+        prompt: "Say this out loud:",
+        targetText: "Turn left, then go straight.",
+        translation: "Directions you can hear.",
+      },
+    ],
+    aiTeacher: {
+      openingLine: "Hi! Let's learn how to ask for directions. Where would you like to go?",
+      instructions:
+        "You are Emma, a cheerful English teacher on a live video call with a beginner. " +
+        "Teach left, right, station and 'Where is ...?'. Give simple directions and ask the learner to repeat them. Keep every reply under two sentences.",
+    },
+  },
+  {
+    id: "en-1-5",
+    unitId: "en-unit-1",
+    languageCode: "en",
+    order: 5,
+    title: "Shopping",
+    emoji: "🛍️",
+    image: getPlaceholderImage("en-1-5"),
+    description: "Ask for prices and buy what you need.",
+    type: "audio",
+    xpReward: 15,
+    estimatedMinutes: 6,
+    goals: [
+      "Ask how much something costs",
+      "Say what you want to buy",
+      "Pay and say thank you",
+    ],
+    vocabulary: [
+      { id: "en-1-5-v1", emoji: "💵", word: "price", translation: "how much something costs", pronunciation: "pryss" },
+      { id: "en-1-5-v2", emoji: "👕", word: "shirt", translation: "clothes for your upper body", pronunciation: "shurt" },
+      { id: "en-1-5-v3", emoji: "💳", word: "pay", translation: "give money for something", pronunciation: "pay" },
+    ],
+    phrases: [
+      { id: "en-1-5-p1", text: "How much is this shirt?", translation: "Ask for a price.", pronunciation: "how MUCH iz this SHURT" },
+      { id: "en-1-5-p2", text: "I would like to pay by card.", translation: "Say how you will pay.", pronunciation: "eye wood lyk too pay by KARD" },
+    ],
+    activities: [
+      {
+        id: "en-1-5-a1",
+        type: "multiple-choice",
+        prompt: "What does “price” mean?",
+        options: ["how much something costs", "a type of shop", "a color", "a gift"],
+        correctAnswer: "how much something costs",
+      },
+      {
+        id: "en-1-5-a2",
+        type: "translation",
+        prompt: "Ask the price of a shirt.",
+        answer: "How much is this shirt?",
+      },
+      {
+        id: "en-1-5-a3",
+        type: "speaking",
+        prompt: "Say this out loud:",
+        targetText: "I would like to pay by card.",
+        translation: "Say how you will pay.",
+      },
+    ],
+    aiTeacher: {
+      openingLine: "Welcome to the shop! Today we will practice asking for prices.",
+      instructions:
+        "You are Emma, a friendly English teacher in an audio-only lesson with a beginner. " +
+        "Role-play a shop assistant. Teach 'price', 'shirt' and 'pay'. Speak slowly, repeat key phrases twice, and keep replies to one or two sentences.",
+    },
+  },
+  {
+    id: "en-1-6",
+    unitId: "en-unit-1",
+    languageCode: "en",
+    order: 6,
+    title: "Family & Friends",
+    emoji: "👨‍👩‍👧",
+    image: getPlaceholderImage("en-1-6"),
+    description: "Talk about the people who matter to you.",
+    type: "chat",
+    xpReward: 15,
+    estimatedMinutes: 6,
+    goals: [
+      "Name family members",
+      "Say how many people are in your family",
+      "Talk about a friend",
+    ],
+    vocabulary: [
+      { id: "en-1-6-v1", emoji: "👩", word: "mother", translation: "your female parent", pronunciation: "MUTH-er" },
+      { id: "en-1-6-v2", emoji: "👨", word: "father", translation: "your male parent", pronunciation: "FAH-ther" },
+      { id: "en-1-6-v3", emoji: "🧑‍🤝‍🧑", word: "friend", translation: "someone you like and trust", pronunciation: "frend" },
+    ],
+    phrases: [
+      { id: "en-1-6-p1", text: "I have two brothers.", translation: "Say how many brothers you have.", pronunciation: "eye hav too BRUTH-erz" },
+      { id: "en-1-6-p2", text: "She is my best friend.", translation: "Talk about a friend.", pronunciation: "shee iz my best FREND" },
+    ],
+    activities: [
+      {
+        id: "en-1-6-a1",
+        type: "multiple-choice",
+        prompt: "Who is your “mother”?",
+        options: ["your female parent", "your male parent", "your teacher", "your neighbor"],
+        correctAnswer: "your female parent",
+      },
+      {
+        id: "en-1-6-a2",
+        type: "translation",
+        prompt: "Say you have two brothers.",
+        answer: "I have two brothers.",
+      },
+      {
+        id: "en-1-6-a3",
+        type: "speaking",
+        prompt: "Say this out loud:",
+        targetText: "She is my best friend.",
+        translation: "Talk about a friend.",
+      },
+    ],
+    aiTeacher: {
+      openingLine: "Hi! Tell me about your family. Who lives with you?",
+      instructions:
+        "You are Emma, a friendly English tutor chatting with a beginner. " +
+        "Teach mother, father and friend, then ask the learner short questions about their family. Correct mistakes kindly and keep replies under two sentences.",
     },
   },
 ];

@@ -97,6 +97,7 @@ function RootNavigator() {
       <Stack.Protected guard={!!isSignedIn}>
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="language" />
+        <Stack.Screen name="lesson/[id]" />
       </Stack.Protected>
     </Stack>
   );

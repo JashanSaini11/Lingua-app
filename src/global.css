@@ -164,3 +164,133 @@
 .plan-item__check--done {
   @apply border-lingua-deep-purple bg-lingua-deep-purple;
 }
+
+/* ------------------------------------------------------------------
+   Lessons screen tabs (BEM): block `lesson-tabs`.
+   Elements: `__tab`. Modifier `--active` is the white selected tab.
+   ------------------------------------------------------------------ */
+.lesson-tabs {
+  @apply mx-5 -mt-7 h-[56px] flex-row rounded-2xl bg-surface;
+}
+
+.lesson-tabs__tab {
+  @apply flex-1 items-center justify-center rounded-2xl;
+}
+
+.lesson-tabs__tab--active {
+  @apply border border-b-[3px] border-border border-b-lingua-purple bg-white;
+}
+
+/* ------------------------------------------------------------------
+   Lesson card (BEM): block `lesson-card`, one row of the lessons list.
+   Modifier `--in-progress` is the purple highlighted card.
+   Elements: `__check` (green completed circle) and `__image` (thumbnail).
+   ------------------------------------------------------------------ */
+.lesson-card {
+  @apply mb-2.5 min-h-[80px] flex-row items-center rounded-2xl border border-border bg-white px-5 py-3.5;
+}
+
+.lesson-card--in-progress {
+  @apply border-lingua-purple bg-[#f5f3ff];
+}
+
+.lesson-card__check {
+  @apply size-6 items-center justify-center rounded-full bg-success;
+}
+
+.lesson-card__image {
+  @apply size-[46px] rounded-xl bg-surface;
+}
+
+.lesson-card__badge {
+  @apply absolute -bottom-1 -right-1 size-[26px] items-center justify-center rounded-full border border-border bg-white;
+}
+
+/* ------------------------------------------------------------------
+   Practice (BEM): block `practice-option`, one answer button.
+   Modifiers: `--selected`, `--correct`, `--wrong`.
+   ------------------------------------------------------------------ */
+.practice-option {
+  @apply mb-3 min-h-[60px] justify-center rounded-2xl border-2 border-border bg-white px-5 py-3;
+}
+
+.practice-option--selected {
+  @apply border-lingua-purple bg-[#f5f3ff];
+}
+
+.practice-option--correct {
+  @apply border-success bg-[#e8f8ef];
+}
+
+.practice-option--wrong {
+  @apply border-error bg-[#ffecec];
+}
+
+.practice-button {
+  @apply h-14 items-center justify-center rounded-2xl bg-lingua-deep-purple;
+}
+
+.practice-button--disabled {
+  @apply bg-border;
+}
+
+/* ------------------------------------------------------------------
+   Audio lesson (BEM): header pill and call controls.
+   Block `audio-card`: the teacher card with the mascot.
+   Block `audio-pill`: round icon/number button in the header.
+   Block `audio-control`: one call button. Elements: `__button`, `__label`.
+   Modifiers: `--danger` (End Call) and `--off` (muted / turned off).
+   ------------------------------------------------------------------ */
+.audio-card {
+  /* Same lavender as the background of mascot-teacher.png, so it blends in */
+  @apply min-h-[440px] flex-1 overflow-hidden rounded-[28px] bg-[#e5e5fe] p-3;
+}
+
+.audio-pill {
+  @apply h-11 min-w-11 items-center justify-center rounded-full border border-border bg-white;
+}
+
+.audio-control {
+  @apply flex-1 items-center;
+}
+
+.audio-control__button {
+  @apply size-16 items-center justify-center rounded-full border border-border bg-white;
+}
+
+.audio-control__button--danger {
+  @apply border-error bg-error;
+}
+
+.audio-control__button--off {
+  @apply bg-surface;
+}
+
+.audio-control__label {
+  @apply mt-2 font-poppins text-body-sm text-text-secondary;
+}
+
+/* ------------------------------------------------------------------
+   Audio lesson (BEM): block `audio-feedback`, the lesson feedback card.
+   Elements: `__item` (one column), `__label` and `__value`.
+   Modifier `--divider` adds the line between columns.
+   ------------------------------------------------------------------ */
+.audio-feedback {
+  @apply mt-5 flex-row rounded-3xl bg-white py-5;
+}
+
+.audio-feedback__item {
+  @apply flex-1 items-center px-2;
+}
+
+.audio-feedback__item--divider {
+  @apply border-l border-border;
+}
+
+.audio-feedback__label {
+  @apply font-poppins-medium text-[13px] text-text-primary;
+}
+
+.audio-feedback__value {
+  @apply mt-1 font-poppins-medium text-h4;
+}
