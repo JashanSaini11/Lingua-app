@@ -20,6 +20,7 @@ export type Unit = {
   order: number; // position inside the language path (1, 2, 3...)
   title: string;
   emoji: string; // shown next to the unit title
+  image: string; // picture at the top of the lessons screen
   description: string;
 };
 
@@ -77,6 +78,18 @@ export type AiTeacherPrompt = {
   instructions: string; // system-style prompt for the Vision Agent
 };
 
+// One multiple-choice question in a practice session.
+export type PracticeQuestion = {
+  id: string;
+  emoji?: string; // shown above the prompt for vocabulary questions
+  prompt: string;
+  options: string[];
+  correctAnswer: string; // must match one of `options`
+};
+
+// How a lesson card looks on the lessons screen.
+export type LessonStatus = "completed" | "in-progress" | "not-started";
+
 // One row of "Today's plan" on the home screen.
 export type PlanItemKind = "lesson" | "conversation" | "words";
 
@@ -95,6 +108,7 @@ export type Lesson = {
   order: number; // position inside the unit
   title: string;
   emoji: string; // lesson icon on the path
+  image: string; // lesson picture shown on its card
   description: string;
   type: LessonType;
   xpReward: number;

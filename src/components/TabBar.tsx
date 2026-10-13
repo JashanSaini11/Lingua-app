@@ -1,6 +1,6 @@
 import { Image } from "expo-image";
 import type { BottomTabBarProps } from "expo-router/js-tabs";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Platform, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import Animated, {
   useAnimatedStyle,
@@ -24,20 +24,35 @@ const tabs = {
   profile: { label: "Profile", icon: images.tabProfile },
 } as const;
 
-type TabName = keyof typeof tabs;
+export type TabName = keyof typeof tabs;
 
-export function TabBar({ state, navigation }: BottomTabBarProps) {
+type TabBarViewProps = {
+  activeTab: TabName;
+  onTabPress: (name: TabName) => void;
+};
+
+// The visual bar. It is separate from the router so screens outside the tabs
+// (like the audio lesson) can show the same bar.
+export function TabBarView({ activeTab, onTabPress }: TabBarViewProps) {
   const insets = useSafeAreaInsets();
   const [tabWidth, setTabWidth] = useState(0);
   const circleX = useSharedValue(0);
+  const hasPlacedCircle = useRef(false);
+
+  const tabNames = Object.keys(tabs) as TabName[];
+  const activeIndex = tabNames.indexOf(activeTab);
 
   // Slide the circle to the center of the active tab.
   useEffect(() => {
-    circleX.value = withTiming(
-      state.index * tabWidth + (tabWidth - CIRCLE_SIZE) / 2,
-      { duration: 250 },
-    );
-  }, [state.index, tabWidth, circleX]);
+    if (tabWidth === 0) {
+      return;
+    }
+    const x = activeIndex * tabWidth + (tabWidth - CIRCLE_SIZE) / 2;
+
+    // First placement is instant so the circle does not slide in on mount.
+    circleX.value = hasPlacedCircle.current ? withTiming(x, { duration: 250 }) : x;
+    hasPlacedCircle.current = true;
+  }, [activeIndex, tabWidth, circleX]);
 
   const circleStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: circleX.value }],
@@ -52,37 +67,25 @@ export function TabBar({ state, navigation }: BottomTabBarProps) {
         className="flex-row rounded-[28px] bg-white"
         style={[styles.bar, { height: BAR_HEIGHT }]}
         onLayout={(event) =>
-          setTabWidth(event.nativeEvent.layout.width / state.routes.length)
+          setTabWidth(event.nativeEvent.layout.width / tabNames.length)
         }
       >
         {tabWidth > 0 && (
           <Animated.View style={[styles.circle, circleStyle]} />
         )}
 
-        {state.routes.map((route, index) => {
-          const tab = tabs[route.name as TabName];
-          const isActive = state.index === index;
-
-          const onPress = () => {
-            const event = navigation.emit({
-              type: "tabPress",
-              target: route.key,
-              canPreventDefault: true,
-            });
-
-            if (!isActive && !event.defaultPrevented) {
-              navigation.navigate(route.name, route.params);
-            }
-          };
+        {tabNames.map((name) => {
+          const tab = tabs[name];
+          const isActive = activeTab === name;
 
           return (
             <TouchableOpacity
-              key={route.key}
+              key={name}
               activeOpacity={0.7}
               accessibilityRole="button"
               accessibilityLabel={tab.label}
               accessibilityState={{ selected: isActive }}
-              onPress={onPress}
+              onPress={() => onTabPress(name)}
               className="flex-1 items-center justify-center"
             >
               <Image
@@ -100,6 +103,32 @@ export function TabBar({ state, navigation }: BottomTabBarProps) {
         })}
       </View>
     </View>
+  );
+}
+
+// The bar used by the tabs layout. It connects TabBarView to the tab navigator.
+export function TabBar({ state, navigation }: BottomTabBarProps) {
+  const activeRoute = state.routes[state.index];
+
+  const onTabPress = (name: TabName) => {
+    const route = state.routes.find((item) => item.name === name);
+    if (!route) {
+      return;
+    }
+
+    const event = navigation.emit({
+      type: "tabPress",
+      target: route.key,
+      canPreventDefault: true,
+    });
+
+    if (activeRoute.name !== name && !event.defaultPrevented) {
+      navigation.navigate(route.name, route.params);
+    }
+  };
+
+  return (
+    <TabBarView activeTab={activeRoute.name as TabName} onTabPress={onTabPress} />
   );
 }
 
