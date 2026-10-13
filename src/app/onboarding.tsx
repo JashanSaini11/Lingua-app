@@ -5,6 +5,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { SpeechBubble } from "@/components/SpeechBubble";
 import { images } from "@/constants/images";
+import { posthog } from "@/lib/posthog";
 
 export default function Onboarding() {
   const router = useRouter();
@@ -104,7 +105,10 @@ export default function Onboarding() {
         {/* Call to action */}
         <TouchableOpacity
           activeOpacity={0.85}
-          onPress={() => router.push("/sign-up")}
+          onPress={() => {
+            posthog?.capture("onboarding_started");
+            router.push("/sign-up");
+          }}
           className="mt-4 h-20 flex-row items-center justify-center rounded-[24px] bg-lingua-deep-purple pr-9"
         >
           <Text className="font-poppins-semibold text-h3 text-white">

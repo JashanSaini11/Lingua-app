@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Alert } from "react-native";
 
 import { authErrors, PASSWORD_MIN_LENGTH } from "@/constants/errors";
+import { posthog, posthogLogger } from "@/lib/posthog";
 
 export type AuthMode = "sign-up" | "sign-in";
 export type SocialStrategy = "oauth_google" | "oauth_apple";
@@ -52,7 +53,9 @@ export function useAuthFlow(mode: AuthMode) {
     });
     if (error) {
       showError(error);
+      return false;
     }
+    return true;
   };
 
   // Step 1: send the verification code. Returns true when the code modal should open.
@@ -77,6 +80,10 @@ export function useAuthFlow(mode: AuthMode) {
           showError(sent.error);
           return false;
         }
+        posthog?.capture("authentication_code_requested", { mode });
+        posthogLogger?.info("authentication verification code requested", {
+          auth_mode: mode,
+        });
         return true;
       }
 
@@ -85,6 +92,10 @@ export function useAuthFlow(mode: AuthMode) {
         showError(sent.error);
         return false;
       }
+      posthog?.capture("authentication_code_requested", { mode });
+      posthogLogger?.info("authentication verification code requested", {
+        auth_mode: mode,
+      });
       return true;
     } finally {
       setLoading(false);
@@ -109,8 +120,15 @@ export function useAuthFlow(mode: AuthMode) {
         return false;
       }
 
-      await finishAuth(signUp);
-      return true;
+      if (await finishAuth(signUp)) {
+        posthog?.capture("authentication_completed", { method: "email_code", mode });
+        posthogLogger?.info("authentication completed", {
+          auth_method: "email_code",
+          auth_mode: mode,
+        });
+        return true;
+      }
+      return false;
     }
 
     const { error } = await signIn.emailCode.verifyCode({ code });
@@ -127,13 +145,21 @@ export function useAuthFlow(mode: AuthMode) {
       return false;
     }
 
-    await finishAuth(signIn);
-    return true;
+    if (await finishAuth(signIn)) {
+      posthog?.capture("authentication_completed", { method: "email_code", mode });
+      posthogLogger?.info("authentication completed", {
+        auth_method: "email_code",
+        auth_mode: mode,
+      });
+      return true;
+    }
+    return false;
   };
 
   // Google / Apple. Clerk opens the provider in a browser sheet.
   // The same call signs in existing users and creates new ones.
   const signInWithSocial = async (strategy: SocialStrategy) => {
+    posthog?.capture("social_auth_started", { provider: strategy });
     setLoading(true);
     try {
       const { createdSessionId, setActive, signUp: pendingSignUp } =
@@ -141,6 +167,14 @@ export function useAuthFlow(mode: AuthMode) {
 
       if (createdSessionId && setActive) {
         await setActive({ session: createdSessionId });
+        posthog?.capture("authentication_completed", {
+          method: "social",
+          provider: strategy,
+        });
+        posthogLogger?.info("authentication completed", {
+          auth_method: "social",
+          auth_provider: strategy,
+        });
         router.replace("/");
       } else if (pendingSignUp?.status === "missing_requirements") {
         Alert.alert(

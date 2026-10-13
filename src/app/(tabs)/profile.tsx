@@ -2,6 +2,7 @@ import { useAuth } from "@clerk/expo";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Text, TouchableOpacity, View } from "react-native";
 
+import { posthog, posthogLogger } from "@/lib/posthog";
 import { useLanguageStore } from "@/store/useLanguageStore";
 
 export default function ProfileScreen() {
@@ -14,6 +15,13 @@ export default function ProfileScreen() {
     // the store just saved is removed as well.
     useLanguageStore.setState({ selectedLanguage: null });
     await AsyncStorage.clear();
+  };
+
+  const handleSignOut = async () => {
+    posthog?.capture("user_signed_out");
+    posthogLogger?.info("user sign out requested");
+    await signOut();
+    posthog?.reset();
   };
 
   return (
@@ -33,7 +41,7 @@ export default function ProfileScreen() {
       {/* Signing out sends the user back to onboarding. */}
       <TouchableOpacity
         activeOpacity={0.85}
-        onPress={() => signOut()}
+        onPress={handleSignOut}
         className="mt-4 h-14 items-center justify-center rounded-2xl bg-lingua-deep-purple px-8"
       >
         <Text className="font-poppins-semibold text-h4 text-white">

@@ -1,13 +1,15 @@
 import "../global.css";
 
-import { ClerkProvider, useAuth } from "@clerk/expo";
+import { ClerkProvider, useAuth, useUser } from "@clerk/expo";
 import { tokenCache } from "@clerk/expo/token-cache";
 import { useFonts } from "expo-font";
-import { Stack } from "expo-router";
+import { Stack, usePathname } from "expo-router";
+import { PostHogProvider, usePostHog } from "posthog-react-native";
 import * as SplashScreen from "expo-splash-screen";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 import { fontAssets } from "@/constants/theme";
+import { posthog } from "@/lib/posthog";
 import { useLanguageStore } from "@/store/useLanguageStore";
 
 SplashScreen.preventAutoHideAsync();
@@ -16,6 +18,50 @@ const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY!;
 
 if (!publishableKey) {
   throw new Error("Add your Clerk Publishable Key to the .env file");
+}
+
+function PostHogUserIdentity() {
+  const { isLoaded, isSignedIn } = useAuth();
+  const { user } = useUser();
+  const posthogClient = usePostHog();
+  const identifiedUserId = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!isLoaded) {
+      return;
+    }
+    if (!isSignedIn) {
+      identifiedUserId.current = null;
+      return;
+    }
+    if (!user || identifiedUserId.current === user.id) {
+      return;
+    }
+
+    posthogClient.identify(user.id, {
+      $set: {
+        ...(user.primaryEmailAddress?.emailAddress
+          ? { email: user.primaryEmailAddress.emailAddress }
+          : {}),
+        ...(user.firstName ? { first_name: user.firstName } : {}),
+        ...(user.lastName ? { last_name: user.lastName } : {}),
+      },
+    });
+    identifiedUserId.current = user.id;
+  }, [isLoaded, isSignedIn, posthogClient, user]);
+
+  return null;
+}
+
+function PostHogScreenTracking() {
+  const pathname = usePathname();
+  const posthogClient = usePostHog();
+
+  useEffect(() => {
+    posthogClient.screen(pathname);
+  }, [pathname, posthogClient]);
+
+  return null;
 }
 
 function RootNavigator() {
@@ -57,9 +103,19 @@ function RootNavigator() {
 }
 
 export default function RootLayout() {
+  const content = <RootNavigator />;
+
   return (
     <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}>
-      <RootNavigator />
+      {posthog ? (
+        <PostHogProvider client={posthog}>
+          <PostHogUserIdentity />
+          <PostHogScreenTracking />
+          {content}
+        </PostHogProvider>
+      ) : (
+        content
+      )}
     </ClerkProvider>
   );
 }

@@ -13,6 +13,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { images } from "@/constants/images";
 import { languages } from "@/data/languages";
+import { posthog } from "@/lib/posthog";
 import { useLanguageStore } from "@/store/useLanguageStore";
 import type { LanguageCode } from "@/types/learning";
 
@@ -45,6 +46,7 @@ export default function LanguageScreen() {
 
   const confirm = () => {
     setSelectedLanguage(selected);
+    posthog?.capture("language_selected", { language_code: selected });
     goBack();
   };
 
