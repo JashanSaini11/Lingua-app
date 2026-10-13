@@ -11,6 +11,7 @@ import { images } from "@/constants/images";
 import { colors } from "@/constants/theme";
 import { getLanguageByCode } from "@/data/languages";
 import { getHomeContent } from "@/lib/home";
+import { posthog, posthogLogger } from "@/lib/posthog";
 import { useLanguageStore } from "@/store/useLanguageStore";
 import { useProgressStore } from "@/store/useProgressStore";
 
@@ -78,7 +79,19 @@ export default function HomeScreen() {
             languageName={language.name}
             level={level}
             unitNumber={unitNumber}
-            onContinue={() => router.push("/learn")}
+            onContinue={() => {
+              posthog?.capture("learning_continued", {
+                language_code: selectedLanguage,
+                unit_number: unitNumber,
+                level,
+              });
+              posthogLogger?.info("learning session continued", {
+                language_code: selectedLanguage,
+                unit_number: unitNumber,
+                level,
+              });
+              router.push("/learn");
+            }}
           />
 
           {/* Today's plan */}
