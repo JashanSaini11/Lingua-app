@@ -8,6 +8,7 @@ import { PostHogProvider, usePostHog } from "posthog-react-native";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect, useRef } from "react";
 
+import { StreamVideoProvider } from "@/components/StreamVideoProvider";
 import { fontAssets } from "@/constants/theme";
 import { posthog } from "@/lib/posthog";
 import { useLanguageStore } from "@/store/useLanguageStore";
@@ -85,21 +86,24 @@ function RootNavigator() {
 
   // Signed out users only see onboarding and the auth screens,
   // signed in users only see the app. Expo Router redirects automatically
-  // when `isSignedIn` changes.
+  // when `isSignedIn` changes. StreamVideoProvider gives signed in users
+  // a Stream client for the audio lessons.
   return (
-    <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Protected guard={!isSignedIn}>
-        <Stack.Screen name="onboarding" />
-        <Stack.Screen name="(auth)/sign-in" />
-        <Stack.Screen name="(auth)/sign-up" />
-      </Stack.Protected>
+    <StreamVideoProvider>
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Protected guard={!isSignedIn}>
+          <Stack.Screen name="onboarding" />
+          <Stack.Screen name="(auth)/sign-in" />
+          <Stack.Screen name="(auth)/sign-up" />
+        </Stack.Protected>
 
-      <Stack.Protected guard={!!isSignedIn}>
-        <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="language" />
-        <Stack.Screen name="lesson/[id]" />
-      </Stack.Protected>
-    </Stack>
+        <Stack.Protected guard={!!isSignedIn}>
+          <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="language" />
+          <Stack.Screen name="lesson/[id]" />
+        </Stack.Protected>
+      </Stack>
+    </StreamVideoProvider>
   );
 }
 
