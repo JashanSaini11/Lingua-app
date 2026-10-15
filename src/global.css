@@ -238,8 +238,10 @@
    Audio lesson (BEM): header pill and call controls.
    Block `audio-card`: the teacher card with the mascot.
    Block `audio-pill`: round icon/number button in the header.
-   Block `audio-control`: one call button. Elements: `__button`, `__label`.
-   Modifiers: `--danger` (End Call) and `--off` (muted / turned off).
+   Modifier `audio-pill--danger`: the red End Call button in the header.
+   Block `audio-talk`: the hold-to-talk mic. Elements: `__ring`, `__button`,
+   `__hint` (each has an `--active` modifier while the mic is open).
+   Modifier `audio-talk--disabled`: no call running yet.
    ------------------------------------------------------------------ */
 .audio-card {
   /* Same lavender as the background of mascot-teacher.png, so it blends in */
@@ -250,27 +252,39 @@
   @apply h-11 min-w-11 items-center justify-center rounded-full border border-border bg-white;
 }
 
-.audio-control {
-  @apply flex-1 items-center;
-}
-
-.audio-control__button {
-  @apply size-16 items-center justify-center rounded-full border border-border bg-white;
-}
-
-.audio-control__button--danger {
+.audio-pill--danger {
   @apply border-error bg-error;
 }
 
-.audio-control__button--off {
-  @apply bg-surface;
+.audio-talk {
+  @apply mt-5 items-center;
 }
 
-.audio-control__label {
-  @apply mt-2 font-poppins text-body-sm text-text-secondary;
+.audio-talk__ring {
+  @apply size-[112px] items-center justify-center rounded-full bg-[#e5e5fe];
 }
 
-.audio-control--disabled {
+.audio-talk__button {
+  @apply size-20 items-center justify-center rounded-full bg-lingua-deep-purple;
+}
+
+.audio-talk__hint {
+  @apply mt-3 font-poppins-medium text-body-md text-text-secondary;
+}
+
+.audio-talk__ring--active {
+  @apply bg-[#d3f5e2];
+}
+
+.audio-talk__button--active {
+  @apply bg-success;
+}
+
+.audio-talk__hint--active {
+  @apply text-success;
+}
+
+.audio-talk--disabled {
   @apply opacity-40;
 }
 

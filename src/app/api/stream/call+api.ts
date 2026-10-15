@@ -7,8 +7,27 @@ import { AGENT_USER_ID, AGENT_USER_NAME } from "@/lib/server/visionAgent";
 type CallRequestBody = {
   lessonId?: string;
   userName?: string;
+  firstName?: string;
   userImage?: string;
+  utcOffsetMinutes?: number;
 };
+
+// The name is spoken by the AI teacher and put in its prompt, so keep only
+// letters, spaces, apostrophes and hyphens, and cut it short.
+function cleanFirstName(name: string | undefined): string | undefined {
+  const cleaned = name
+    ?.replace(/[^\p{L}\p{M}' -]/gu, "")
+    .trim()
+    .slice(0, 30);
+  return cleaned || undefined;
+}
+
+// The phone's UTC offset in minutes, so the teacher knows the learner's local time.
+function cleanUtcOffset(offset: number | undefined): number | undefined {
+  return typeof offset === "number" && Math.abs(offset) <= 14 * 60
+    ? Math.round(offset)
+    : undefined;
+}
 
 // POST /api/stream/call
 // Creates an audio-only Stream call for one lesson and one signed-in user.
@@ -58,6 +77,9 @@ export async function POST(request: Request) {
           languageCode: language.code,
           languageName: language.name,
           teacherName: language.teacherName,
+          // Lets the teacher greet the learner by name and by local time of day.
+          learnerName: cleanFirstName(body.firstName),
+          utcOffsetMinutes: cleanUtcOffset(body.utcOffsetMinutes),
           goals: lesson.goals,
           vocabulary: lesson.vocabulary.map(
             ({ word, translation, pronunciation }) => ({
@@ -73,13 +95,28 @@ export async function POST(request: Request) {
           openingLine: lesson.aiTeacher.openingLine,
           teacherPrompt: lesson.aiTeacher.instructions,
         },
-        // Audio only: the app never turns the camera on, and it turns the
-        // microphone on itself after joining so it can handle a denied permission.
+        // Audio only: the app never turns the camera on, and the microphone
+        // stays off until the learner holds the talk button (push to talk).
         settings_override: {
           audio: { default_device: "speaker", mic_default_on: false },
         },
       },
     });
+
+    // The AI teacher writes everything it says to the chat channel that has the
+    // same id as the call. Make the learner a member now, so the app can read
+    // it as a live transcript. The transcript is optional, so a failure here
+    // must not stop the lesson.
+    try {
+      await streamClient.chat.channel("messaging", callId).getOrCreate({
+        data: {
+          created_by_id: userId,
+          members: [{ user_id: userId }, { user_id: AGENT_USER_ID }],
+        },
+      });
+    } catch (chatError) {
+      console.error("Transcript channel failed", chatError);
+    }
 
     return Response.json({ callId, callType: "default" });
   } catch (error) {
