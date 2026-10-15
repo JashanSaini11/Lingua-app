@@ -18,7 +18,12 @@ import { images } from "@/constants/images";
 import { colors } from "@/constants/theme";
 import { getLanguageByCode } from "@/data/languages";
 import { getLessonById } from "@/data/lessons";
-import { useAudioLessonCall, type CallStatus } from "@/hooks/useAudioLessonCall";
+import {
+  useAudioLessonCall,
+  type AgentStatus,
+  type CallStatus,
+} from "@/hooks/useAudioLessonCall";
+import { useTeacherTranscript } from "@/hooks/useTeacherTranscript";
 import { useProgressStore } from "@/store/useProgressStore";
 
 // Where each bottom tab goes when it is pressed from this screen.
@@ -30,12 +35,20 @@ const tabRoutes = {
   profile: "/profile",
 } as const;
 
-// Lesson feedback is hardcoded until the AI teacher can score the learner.
-const feedback = [
-  { label: "Speaking", value: "Excellent", color: "text-success" },
-  { label: "Pronunciation", value: "Great", color: "text-info" },
-  { label: "Grammar", value: "Good", color: "text-lingua-deep-purple" },
-];
+// The AI teacher scores the learner from 1 to 5 at the end of the lesson.
+const feedbackRows = [
+  { label: "Speaking", key: "speaking" },
+  { label: "Pronunciation", key: "pronunciation" },
+  { label: "Grammar", key: "grammar" },
+] as const;
+
+const scoreLabels: Record<number, { value: string; color: string }> = {
+  5: { value: "Excellent", color: "text-success" },
+  4: { value: "Great", color: "text-info" },
+  3: { value: "Good", color: "text-lingua-deep-purple" },
+  2: { value: "Keep going", color: "text-streak" },
+  1: { value: "Needs practice", color: "text-error" },
+};
 
 // Text and dot color for each call state. While joined, the mic state is shown.
 const statusLabels: Record<CallStatus, { label: string; dot: string }> = {
@@ -46,6 +59,15 @@ const statusLabels: Record<CallStatus, { label: string; dot: string }> = {
   reconnecting: { label: "Reconnecting…", dot: "bg-warning" },
   ended: { label: "Call ended", dot: "bg-text-secondary" },
   error: { label: "Call failed", dot: "bg-error" },
+};
+
+// Text and dot color for the AI teacher, shown while the learner is in a call.
+const agentLabels: Record<AgentStatus, { label: string; dot: string }> = {
+  idle: { label: "AI teacher: waiting", dot: "bg-text-secondary" },
+  connecting: { label: "AI teacher: joining…", dot: "bg-warning" },
+  connected: { label: "AI teacher: connected", dot: "bg-success" },
+  failed: { label: "AI teacher: failed to join", dot: "bg-error" },
+  left: { label: "AI teacher: left the call", dot: "bg-error" },
 };
 
 // Label of the button that starts a call, only for the states that show it.
@@ -64,13 +86,29 @@ export default function AudioLessonScreen() {
   const lesson = getLessonById(id);
   const completeLesson = useProgressStore((state) => state.completeLesson);
   const streakDays = useProgressStore((state) => state.streakDays);
+  const completedLessonIds = useProgressStore(
+    (state) => state.completedLessonIds,
+  );
 
   const { user } = useUser();
-  const { status, isMicOn, error, start, toggleMic, end } =
-    useAudioLessonCall(id);
+  const {
+    status,
+    agentStatus,
+    isMicOn,
+    feedback,
+    callId,
+    error,
+    start,
+    retryAgent,
+    startTalking,
+    stopTalking,
+    end,
+  } = useAudioLessonCall(id);
+  const { teacherText } = useTeacherTranscript(callId);
 
-  const [showSubtitles, setShowSubtitles] = useState(true);
   const [lineIndex, setLineIndex] = useState(0);
+  // Set when a call ends: new XP, a repeat of a finished lesson, or too short.
+  const [result, setResult] = useState<"xp" | "repeat" | "short" | undefined>();
 
   const language = lesson ? getLanguageByCode(lesson.languageCode) : undefined;
   const userName =
@@ -96,28 +134,42 @@ export default function AudioLessonScreen() {
   const nextLine = () => setLineIndex((lineIndex + 1) % teacherLines.length);
 
   const isInCall = status === "joined" || status === "reconnecting";
+  // While the teacher is talking, the bubble shows what it really says.
+  // Before that (or if the transcript is unavailable) it shows the lesson phrases.
+  const liveText = isInCall ? teacherText : undefined;
   const isBusy = status === "starting" || status === "connecting";
   const startLabel = startLabels[status];
   const statusInfo =
-    status === "joined" && !isMicOn
-      ? { label: "Mic muted", dot: "bg-text-secondary" }
+    status === "joined" && isMicOn
+      ? { label: "Listening…", dot: "bg-success" }
       : statusLabels[status];
 
-  // Ending a call that was running finishes the lesson and gives the XP.
+  // Ending a call that was running gives the XP, but only if the learner
+  // talked with the teacher for at least a minute.
   // With no call running, the button just closes the screen.
   const endCall = async () => {
     if (!isInCall) {
       router.back();
       return;
     }
-    await end();
-    completeLesson(lesson.id, lesson.xpReward);
+    const wasCompleted = completedLessonIds.includes(lesson.id);
+    const earned = await end();
+    if (earned) completeLesson(lesson.id, lesson.xpReward);
+    setResult(!earned ? "short" : wasCompleted ? "repeat" : "xp");
   };
+
+  const startCall = () => {
+    setResult(undefined);
+    start();
+  };
+
+  const canRetryAgent =
+    isInCall && (agentStatus === "failed" || agentStatus === "left");
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       <SafeAreaView edges={["top"]} style={{ flex: 1 }}>
-        {/* Header: back, teacher status, streak, bell */}
+        {/* Header: back, teacher status, streak, end call */}
         <View className="mt-2 h-14 flex-row items-center px-5">
           <TouchableOpacity
             activeOpacity={0.6}
@@ -154,13 +206,19 @@ export default function AudioLessonScreen() {
               {streakDays}
             </Text>
           </View>
-          <View className="audio-pill ml-2">
+          <TouchableOpacity
+            activeOpacity={0.8}
+            disabled={status === "starting"}
+            accessibilityLabel="End call"
+            onPress={endCall}
+            className={`audio-pill audio-pill--danger ml-2 ${status === "starting" ? "opacity-40" : ""}`}
+          >
             <Image
-              source={images.bell}
-              tintColor={colors.textPrimary}
-              style={{ width: 22, height: 22 }}
+              source={images.phoneHangup}
+              tintColor={colors.background}
+              style={{ width: 24, height: 24 }}
             />
-          </View>
+          </TouchableOpacity>
         </View>
 
         <ScrollView
@@ -216,26 +274,28 @@ export default function AudioLessonScreen() {
               >
                 <View className="flex-1">
                   <Text className="font-poppins-medium text-[18px] leading-7 text-text-primary">
-                    {line.text}
+                    {liveText ?? line.text}
                   </Text>
-                  {showSubtitles && line.translation && (
+                  {!liveText && line.translation && (
                     <Text className="font-poppins-medium text-[18px] leading-7 text-text-secondary">
                       {line.translation}
                     </Text>
                   )}
                 </View>
-                <TouchableOpacity
-                  activeOpacity={0.6}
-                  accessibilityLabel="Next phrase"
-                  onPress={nextLine}
-                  className="ml-3 size-11 items-center justify-center"
-                >
-                  <Image
-                    source={images.volume}
-                    tintColor={colors.linguaDeepPurple}
-                    style={{ width: 28, height: 28 }}
-                  />
-                </TouchableOpacity>
+                {!liveText && (
+                  <TouchableOpacity
+                    activeOpacity={0.6}
+                    accessibilityLabel="Next phrase"
+                    onPress={nextLine}
+                    className="ml-3 size-11 items-center justify-center"
+                  >
+                    <Image
+                      source={images.volume}
+                      tintColor={colors.linguaDeepPurple}
+                      style={{ width: 28, height: 28 }}
+                    />
+                  </TouchableOpacity>
+                )}
               </View>
             </View>
           </View>
@@ -282,13 +342,50 @@ export default function AudioLessonScreen() {
               </View>
             </View>
 
+            {isInCall && (
+              <View className="audio-call__agent">
+                {agentStatus === "connecting" ? (
+                  <ActivityIndicator size="small" color={colors.warning} />
+                ) : (
+                  <View
+                    className={`size-2 rounded-full ${agentLabels[agentStatus].dot}`}
+                  />
+                )}
+                <Text className="typography--caption ml-2 text-text-primary">
+                  {agentLabels[agentStatus].label}
+                </Text>
+              </View>
+            )}
+
+            {canRetryAgent && (
+              <TouchableOpacity
+                activeOpacity={0.8}
+                accessibilityLabel="Call the teacher again"
+                onPress={retryAgent}
+                className="practice-button mt-4"
+              >
+                <Text className="font-poppins-semibold text-h4 text-white">
+                  Call the teacher again
+                </Text>
+              </TouchableOpacity>
+            )}
+
             {error && <Text className="audio-call__error">{error}</Text>}
+
+            {status === "ended" && result && (
+              <Text className="typography--body-sm mt-3 text-center text-text-secondary">
+                {result === "xp" && `Lesson complete! +${lesson.xpReward} XP`}
+                {result === "repeat" && "Nice practice! You already earned the XP for this lesson."}
+                {result === "short" &&
+                  "Talk with your teacher for at least a minute to earn XP."}
+              </Text>
+            )}
 
             {startLabel && (
               <TouchableOpacity
                 activeOpacity={0.8}
                 accessibilityLabel={startLabel}
-                onPress={start}
+                onPress={startCall}
                 className="practice-button mt-4"
               >
                 <Text className="font-poppins-semibold text-h4 text-white">
@@ -298,85 +395,59 @@ export default function AudioLessonScreen() {
             )}
           </View>
 
-          {/* Call controls */}
-          <View className="mt-5 flex-row">
+          {/* Hold to talk: the mic is only open while the button is pressed */}
+          <View className={`audio-talk ${isInCall ? "" : "audio-talk--disabled"}`}>
             <View
-              className={`audio-control ${isInCall ? "" : "audio-control--disabled"}`}
+              className={`audio-talk__ring ${isMicOn ? "audio-talk__ring--active" : ""}`}
             >
               <TouchableOpacity
-                activeOpacity={0.8}
+                activeOpacity={0.9}
                 disabled={!isInCall}
-                accessibilityLabel={isMicOn ? "Mute mic" : "Unmute mic"}
-                onPress={toggleMic}
-                className={`audio-control__button ${isMicOn ? "" : "audio-control__button--off"}`}
+                accessibilityLabel="Hold to talk"
+                onPressIn={startTalking}
+                onPressOut={stopTalking}
+                className={`audio-talk__button ${isMicOn ? "audio-talk__button--active" : ""}`}
               >
                 <Image
-                  source={isMicOn ? images.mic : images.micOff}
-                  tintColor={isMicOn ? colors.textPrimary : colors.error}
-                  style={{ width: 28, height: 28 }}
-                />
-              </TouchableOpacity>
-              <Text className="audio-control__label">
-                {isInCall && !isMicOn ? "Unmute" : "Mic"}
-              </Text>
-            </View>
-
-            <View className="audio-control">
-              <TouchableOpacity
-                activeOpacity={0.8}
-                accessibilityLabel="Subtitles"
-                onPress={() => setShowSubtitles((value) => !value)}
-                className={`audio-control__button ${showSubtitles ? "" : "audio-control__button--off"}`}
-              >
-                <Image
-                  source={images.translate}
-                  tintColor={
-                    showSubtitles ? colors.textPrimary : colors.textSecondary
-                  }
-                  style={{ width: 28, height: 28 }}
-                />
-              </TouchableOpacity>
-              <Text className="audio-control__label">Subtitles</Text>
-            </View>
-
-            <View
-              className={`audio-control ${status === "starting" ? "audio-control--disabled" : ""}`}
-            >
-              <TouchableOpacity
-                activeOpacity={0.8}
-                disabled={status === "starting"}
-                accessibilityLabel="End call"
-                onPress={endCall}
-                className="audio-control__button audio-control__button--danger"
-              >
-                <Image
-                  source={images.phoneHangup}
+                  source={images.mic}
                   tintColor={colors.background}
-                  style={{ width: 30, height: 30 }}
+                  style={{ width: 36, height: 36 }}
                 />
               </TouchableOpacity>
-              <Text className="audio-control__label">End Call</Text>
             </View>
+            <Text
+              className={`audio-talk__hint ${isMicOn ? "audio-talk__hint--active" : ""}`}
+            >
+              {isMicOn
+                ? "Listening… release when done"
+                : isInCall
+                  ? "Hold to talk"
+                  : "Start the call to talk"}
+            </Text>
           </View>
 
           {/* Lesson feedback */}
           <View className="audio-feedback" style={styles.shadow}>
-            {feedback.map((item, index) => (
-              <View
-                key={item.label}
-                className={`audio-feedback__item ${index > 0 ? "audio-feedback__item--divider" : ""}`}
-              >
-                <Text className="audio-feedback__label" numberOfLines={1}>
-                  {item.label}
-                </Text>
-                <Text
-                  className={`audio-feedback__value ${item.color}`}
-                  numberOfLines={1}
+            {feedbackRows.map((item, index) => {
+              // Until the teacher reports its scores, show a dash.
+              const score = feedback ? scoreLabels[feedback[item.key]] : undefined;
+              return (
+                <View
+                  key={item.key}
+                  className={`audio-feedback__item ${index > 0 ? "audio-feedback__item--divider" : ""}`}
                 >
-                  {item.value}
-                </Text>
-              </View>
-            ))}
+                  <Text className="audio-feedback__label" numberOfLines={1}>
+                    {item.label}
+                  </Text>
+                  <Text
+                    className={`audio-feedback__value ${score?.color ?? "text-text-secondary"}`}
+                    numberOfLines={1}
+                  >
+                    {score?.value ?? "—"}
+                  </Text>
+                </View>
+              );
+            })}
           </View>
         </ScrollView>
       </SafeAreaView>

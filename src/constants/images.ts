@@ -16,7 +16,6 @@ import google from "@/assets/images/google.svg";
 import headphones from "@/assets/images/headphones.svg";
 import mail from "@/assets/images/mail.svg";
 import mic from "@/assets/images/mic.svg";
-import micOff from "@/assets/images/mic-off.svg";
 import mascotAuth from "@/assets/images/mascot-auth.png";
 import mascotTeacher from "@/assets/images/mascot-teacher.png";
 import mascotWelcome from "@/assets/images/mascot-welcome.png";
@@ -32,7 +31,6 @@ import tabChat from "@/assets/images/tab-chat.svg";
 import tabHome from "@/assets/images/tab-home.svg";
 import tabLearn from "@/assets/images/tab-learn.svg";
 import tabProfile from "@/assets/images/tab-profile.svg";
-import translate from "@/assets/images/translate.svg";
 import treasure from "@/assets/images/treasure.png";
 import volume from "@/assets/images/volume.svg";
 import words from "@/assets/images/words.svg";
@@ -57,7 +55,6 @@ export const images = {
   mascotWelcome,
   mascotLogo,
   mic,
-  micOff,
   palace,
   phoneHangup,
   search,
@@ -69,7 +66,6 @@ export const images = {
   tabHome,
   tabLearn,
   tabProfile,
-  translate,
   treasure,
   volume,
   words,
