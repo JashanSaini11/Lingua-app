@@ -277,7 +277,7 @@
 /* ------------------------------------------------------------------
    Audio lesson (BEM): block `audio-call`, the learner + call status card.
    Elements: `__user` (avatar, name row), `__status` (state pill),
-   `__error` (error message).
+   `__agent` (AI teacher connection row), `__error` (error message).
    ------------------------------------------------------------------ */
 .audio-call {
   @apply mt-4 rounded-3xl border border-border bg-white p-4;
@@ -289,6 +289,10 @@
 
 .audio-call__status {
   @apply ml-2 flex-row items-center rounded-full bg-surface px-3 py-1.5;
+}
+
+.audio-call__agent {
+  @apply mt-3 flex-row items-center;
 }
 
 .audio-call__error {

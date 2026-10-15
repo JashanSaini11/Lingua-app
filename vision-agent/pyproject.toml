@@ -1,0 +1,9 @@
+[project]
+name = "vision-agent"
+version = "0.1.0"
+description = "AI language teacher (voice only) built with Vision Agents"
+requires-python = ">=3.10"
+dependencies = [
+    "vision-agents[gemini,getstream,openai]",
+    "python-dotenv",
+]

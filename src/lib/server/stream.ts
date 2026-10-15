@@ -9,3 +9,20 @@ export function getStreamServerClient(): StreamClient {
   }
   return new StreamClient(apiKey, apiSecret);
 }
+
+// True when this user created the call. Agent routes use it so one user can
+// never start or stop an agent on someone else's call.
+export async function isCallCreator(
+  userId: string,
+  callType: string,
+  callId: string,
+): Promise<boolean> {
+  try {
+    const { call } = await getStreamServerClient()
+      .video.call(callType, callId)
+      .get();
+    return call.created_by.id === userId;
+  } catch {
+    return false;
+  }
+}

@@ -6,7 +6,12 @@ import {
 } from "@stream-io/video-react-native-sdk";
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { createLessonCall, getStreamUserInfo } from "@/lib/stream";
+import {
+  createLessonCall,
+  getStreamUserInfo,
+  startAgent,
+  stopAgent,
+} from "@/lib/stream";
 
 // What the audio lesson screen shows:
 // idle -> starting (server creates the call) -> connecting (joining)
@@ -20,6 +25,15 @@ export type CallStatus =
   | "ended"
   | "error";
 
+// The AI teacher has its own state: the learner can already be in the call
+// while the teacher is still joining, or failed to join.
+export type AgentStatus = "idle" | "connecting" | "connected" | "failed";
+
+// How long we wait for the teacher to show up in the call.
+const AGENT_JOIN_TIMEOUT_MS = 30_000;
+
+type AgentSession = { callType: string; callId: string; sessionId: string };
+
 function getErrorMessage(error: unknown): string {
   const message = error instanceof Error ? error.message : "";
   if (/permission|NotAllowed/i.test(message)) {
@@ -29,6 +43,7 @@ function getErrorMessage(error: unknown): string {
 }
 
 // Owns one audio-only Stream call for one lesson: start, mute and end.
+// It also starts the AI teacher in the same call and stops it again.
 export function useAudioLessonCall(lessonId: string) {
   const client = useStreamVideoClient();
   const { getToken } = useAuth();
@@ -36,8 +51,12 @@ export function useAudioLessonCall(lessonId: string) {
 
   const callRef = useRef<Call | undefined>(undefined);
   const stopListeningRef = useRef<(() => void) | undefined>(undefined);
+  const agentSessionRef = useRef<AgentSession | undefined>(undefined);
+  // The unmount cleanup always needs the latest getToken.
+  const getTokenRef = useRef(getToken);
 
   const [status, setStatus] = useState<CallStatus>("idle");
+  const [agentStatus, setAgentStatus] = useState<AgentStatus>("idle");
   const [isMicOn, setIsMicOn] = useState(false);
   const [error, setError] = useState<string | undefined>();
 
@@ -53,12 +72,78 @@ export function useAudioLessonCall(lessonId: string) {
     }
   }, []);
 
-  // Never leave a call running when the screen closes.
+  // Asks the server to make the AI teacher leave. Safe to call more than once.
+  const stopAgentSession = useCallback(async () => {
+    const session = agentSessionRef.current;
+    agentSessionRef.current = undefined;
+    if (!session) return;
+
+    try {
+      await stopAgent(
+        await getTokenRef.current(),
+        session.callType,
+        session.callId,
+        session.sessionId,
+      );
+    } catch (stopError) {
+      console.error(stopError);
+    }
+  }, []);
+
+  useEffect(() => {
+    getTokenRef.current = getToken;
+  }, [getToken]);
+
+  // Never leave a call or the AI teacher running when the screen closes.
   useEffect(() => {
     return () => {
+      stopAgentSession();
       leaveCall();
     };
-  }, [leaveCall]);
+  }, [leaveCall, stopAgentSession]);
+
+  // Starts the AI teacher and waits until it shows up as a participant.
+  // A failure here does not end the call, it only marks the teacher as failed.
+  const connectAgent = useCallback(
+    async (call: Call, callType: string, callId: string) => {
+      setAgentStatus("connecting");
+      try {
+        const { sessionId, agentUserId } = await startAgent(
+          await getTokenRef.current(),
+          callType,
+          callId,
+        );
+        agentSessionRef.current = { callType, callId, sessionId };
+
+        // The learner may have ended the call while the teacher was starting.
+        if (callRef.current !== call) {
+          await stopAgentSession();
+          return;
+        }
+
+        await new Promise<void>((resolve, reject) => {
+          const timer = setTimeout(() => {
+            subscription.unsubscribe();
+            reject(new Error("The AI teacher took too long to join."));
+          }, AGENT_JOIN_TIMEOUT_MS);
+          const subscription = call.state.participants$.subscribe(
+            (participants) => {
+              if (participants.some((p) => p.userId === agentUserId)) {
+                clearTimeout(timer);
+                subscription.unsubscribe();
+                resolve();
+              }
+            },
+          );
+        });
+        if (callRef.current === call) setAgentStatus("connected");
+      } catch (agentError) {
+        console.error(agentError);
+        if (callRef.current === call) setAgentStatus("failed");
+      }
+    },
+    [stopAgentSession],
+  );
 
   const start = useCallback(async () => {
     if (!client || !user) {
@@ -68,8 +153,10 @@ export function useAudioLessonCall(lessonId: string) {
     }
 
     // Starting again after an error or an ended call: drop the old call first.
+    await stopAgentSession();
     await leaveCall();
     setError(undefined);
+    setAgentStatus("idle");
     setStatus("starting");
 
     try {
@@ -112,12 +199,25 @@ export function useAudioLessonCall(lessonId: string) {
       await call.join();
       // Audio only: we turn the microphone on and never touch the camera.
       await call.microphone.enable();
+
+      // 3. The learner is in the call, now the AI teacher joins the same call.
+      // Not awaited: the learner can start talking while the teacher connects.
+      connectAgent(call, callType, callId);
     } catch (startError) {
+      await stopAgentSession();
       await leaveCall();
       setError(getErrorMessage(startError));
       setStatus("error");
     }
-  }, [client, getToken, leaveCall, lessonId, user]);
+  }, [
+    client,
+    connectAgent,
+    getToken,
+    leaveCall,
+    lessonId,
+    stopAgentSession,
+    user,
+  ]);
 
   const toggleMic = useCallback(async () => {
     try {
@@ -129,10 +229,12 @@ export function useAudioLessonCall(lessonId: string) {
   }, []);
 
   const end = useCallback(async () => {
+    await stopAgentSession();
     await leaveCall();
     setIsMicOn(false);
+    setAgentStatus("idle");
     setStatus("ended");
-  }, [leaveCall]);
+  }, [leaveCall, stopAgentSession]);
 
-  return { status, isMicOn, error, start, toggleMic, end };
+  return { status, agentStatus, isMicOn, error, start, toggleMic, end };
 }

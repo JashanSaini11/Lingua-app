@@ -18,7 +18,11 @@ import { images } from "@/constants/images";
 import { colors } from "@/constants/theme";
 import { getLanguageByCode } from "@/data/languages";
 import { getLessonById } from "@/data/lessons";
-import { useAudioLessonCall, type CallStatus } from "@/hooks/useAudioLessonCall";
+import {
+  useAudioLessonCall,
+  type AgentStatus,
+  type CallStatus,
+} from "@/hooks/useAudioLessonCall";
 import { useProgressStore } from "@/store/useProgressStore";
 
 // Where each bottom tab goes when it is pressed from this screen.
@@ -48,6 +52,14 @@ const statusLabels: Record<CallStatus, { label: string; dot: string }> = {
   error: { label: "Call failed", dot: "bg-error" },
 };
 
+// Text and dot color for the AI teacher, shown while the learner is in a call.
+const agentLabels: Record<AgentStatus, { label: string; dot: string }> = {
+  idle: { label: "AI teacher: waiting", dot: "bg-text-secondary" },
+  connecting: { label: "AI teacher: joining…", dot: "bg-warning" },
+  connected: { label: "AI teacher: connected", dot: "bg-success" },
+  failed: { label: "AI teacher: failed to join", dot: "bg-error" },
+};
+
 // Label of the button that starts a call, only for the states that show it.
 const startLabels: Partial<Record<CallStatus, string>> = {
   idle: "Start call",
@@ -66,7 +78,7 @@ export default function AudioLessonScreen() {
   const streakDays = useProgressStore((state) => state.streakDays);
 
   const { user } = useUser();
-  const { status, isMicOn, error, start, toggleMic, end } =
+  const { status, agentStatus, isMicOn, error, start, toggleMic, end } =
     useAudioLessonCall(id);
 
   const [showSubtitles, setShowSubtitles] = useState(true);
@@ -281,6 +293,21 @@ export default function AudioLessonScreen() {
                 </Text>
               </View>
             </View>
+
+            {isInCall && (
+              <View className="audio-call__agent">
+                {agentStatus === "connecting" ? (
+                  <ActivityIndicator size="small" color={colors.warning} />
+                ) : (
+                  <View
+                    className={`size-2 rounded-full ${agentLabels[agentStatus].dot}`}
+                  />
+                )}
+                <Text className="typography--caption ml-2 text-text-primary">
+                  {agentLabels[agentStatus].label}
+                </Text>
+              </View>
+            )}
 
             {error && <Text className="audio-call__error">{error}</Text>}
 

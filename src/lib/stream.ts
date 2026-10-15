@@ -48,3 +48,30 @@ export function createLessonCall(
     { lessonId, userName: user.name, userImage: user.image },
   );
 }
+
+// Asks our server to make the AI teacher join the call.
+export function startAgent(
+  clerkToken: string | null,
+  callType: string,
+  callId: string,
+) {
+  return apiPost<{ sessionId: string; agentUserId: string }>(
+    "/api/agent/start",
+    clerkToken,
+    { callType, callId },
+  );
+}
+
+// Asks our server to make the AI teacher leave the call.
+export function stopAgent(
+  clerkToken: string | null,
+  callType: string,
+  callId: string,
+  sessionId: string,
+) {
+  return apiPost<{ ok: boolean }>("/api/agent/stop", clerkToken, {
+    callType,
+    callId,
+    sessionId,
+  });
+}
