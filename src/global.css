@@ -270,6 +270,31 @@
   @apply mt-2 font-poppins text-body-sm text-text-secondary;
 }
 
+.audio-control--disabled {
+  @apply opacity-40;
+}
+
+/* ------------------------------------------------------------------
+   Audio lesson (BEM): block `audio-call`, the learner + call status card.
+   Elements: `__user` (avatar, name row), `__status` (state pill),
+   `__error` (error message).
+   ------------------------------------------------------------------ */
+.audio-call {
+  @apply mt-4 rounded-3xl border border-border bg-white p-4;
+}
+
+.audio-call__user {
+  @apply flex-row items-center;
+}
+
+.audio-call__status {
+  @apply ml-2 flex-row items-center rounded-full bg-surface px-3 py-1.5;
+}
+
+.audio-call__error {
+  @apply mt-3 font-poppins text-body-sm text-error;
+}
+
 /* ------------------------------------------------------------------
    Audio lesson (BEM): block `audio-feedback`, the lesson feedback card.
    Elements: `__item` (one column), `__label` and `__value`.

@@ -1,7 +1,9 @@
+import { useUser } from "@clerk/expo";
 import { Image } from "expo-image";
 import { Redirect, useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
 import {
+  ActivityIndicator,
   Platform,
   ScrollView,
   StyleSheet,
@@ -16,6 +18,7 @@ import { images } from "@/constants/images";
 import { colors } from "@/constants/theme";
 import { getLanguageByCode } from "@/data/languages";
 import { getLessonById } from "@/data/lessons";
+import { useAudioLessonCall, type CallStatus } from "@/hooks/useAudioLessonCall";
 import { useProgressStore } from "@/store/useProgressStore";
 
 // Where each bottom tab goes when it is pressed from this screen.
@@ -34,8 +37,27 @@ const feedback = [
   { label: "Grammar", value: "Good", color: "text-lingua-deep-purple" },
 ];
 
+// Text and dot color for each call state. While joined, the mic state is shown.
+const statusLabels: Record<CallStatus, { label: string; dot: string }> = {
+  idle: { label: "Ready to start", dot: "bg-text-secondary" },
+  starting: { label: "Starting call…", dot: "bg-warning" },
+  connecting: { label: "Connecting…", dot: "bg-warning" },
+  joined: { label: "Live", dot: "bg-success" },
+  reconnecting: { label: "Reconnecting…", dot: "bg-warning" },
+  ended: { label: "Call ended", dot: "bg-text-secondary" },
+  error: { label: "Call failed", dot: "bg-error" },
+};
+
+// Label of the button that starts a call, only for the states that show it.
+const startLabels: Partial<Record<CallStatus, string>> = {
+  idle: "Start call",
+  ended: "Call again",
+  error: "Try again",
+};
+
 // AI Teacher audio lesson. Every lesson from the Learn screen opens here.
-// This is audio only: the teacher is shown as a picture, there is no video call.
+// This is audio only: the teacher is shown as a picture and the learner talks
+// over a Stream audio call. There is no video.
 export default function AudioLessonScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -43,11 +65,19 @@ export default function AudioLessonScreen() {
   const completeLesson = useProgressStore((state) => state.completeLesson);
   const streakDays = useProgressStore((state) => state.streakDays);
 
-  const [isMicOn, setIsMicOn] = useState(true);
+  const { user } = useUser();
+  const { status, isMicOn, error, start, toggleMic, end } =
+    useAudioLessonCall(id);
+
   const [showSubtitles, setShowSubtitles] = useState(true);
   const [lineIndex, setLineIndex] = useState(0);
 
   const language = lesson ? getLanguageByCode(lesson.languageCode) : undefined;
+  const userName =
+    user?.fullName ??
+    user?.username ??
+    user?.primaryEmailAddress?.emailAddress.split("@")[0] ??
+    "Learner";
 
   if (!lesson || !language) {
     return <Redirect href="/learn" />;
@@ -65,10 +95,23 @@ export default function AudioLessonScreen() {
 
   const nextLine = () => setLineIndex((lineIndex + 1) % teacherLines.length);
 
-  // Ending the call finishes the lesson and gives the XP.
-  const endCall = () => {
+  const isInCall = status === "joined" || status === "reconnecting";
+  const isBusy = status === "starting" || status === "connecting";
+  const startLabel = startLabels[status];
+  const statusInfo =
+    status === "joined" && !isMicOn
+      ? { label: "Mic muted", dot: "bg-text-secondary" }
+      : statusLabels[status];
+
+  // Ending a call that was running finishes the lesson and gives the XP.
+  // With no call running, the button just closes the screen.
+  const endCall = async () => {
+    if (!isInCall) {
+      router.back();
+      return;
+    }
+    await end();
     completeLesson(lesson.id, lesson.xpReward);
-    router.back();
   };
 
   return (
@@ -92,11 +135,9 @@ export default function AudioLessonScreen() {
               AI Teacher
             </Text>
             <View className="flex-row items-center">
-              <View
-                className={`size-2.5 rounded-full ${isMicOn ? "bg-success" : "bg-text-secondary"}`}
-              />
+              <View className={`size-2.5 rounded-full ${statusInfo.dot}`} />
               <Text className="typography--body-sm ml-2 text-text-secondary">
-                {isMicOn ? "Online" : "Mic muted"}
+                {statusInfo.label}
               </Text>
             </View>
           </View>
@@ -199,13 +240,74 @@ export default function AudioLessonScreen() {
             </View>
           </View>
 
-          {/* Call controls */}
-          <View className="mt-5 flex-row">
-            <View className="audio-control">
+          {/* Learner info and call status */}
+          <View className="audio-call">
+            <View className="audio-call__user">
+              {user?.imageUrl ? (
+                <Image
+                  source={{ uri: user.imageUrl }}
+                  contentFit="cover"
+                  style={{ width: 44, height: 44, borderRadius: 22 }}
+                />
+              ) : (
+                <View className="size-11 items-center justify-center rounded-full bg-surface">
+                  <Text className="font-poppins-semibold text-h4 text-text-primary">
+                    {userName.charAt(0).toUpperCase()}
+                  </Text>
+                </View>
+              )}
+              <View className="ml-3 flex-1">
+                <Text
+                  className="font-poppins-semibold text-body-md text-text-primary"
+                  numberOfLines={1}
+                >
+                  {userName}
+                </Text>
+                <Text
+                  className="typography--body-sm text-text-secondary"
+                  numberOfLines={1}
+                >
+                  {user?.primaryEmailAddress?.emailAddress ?? "Signed in"}
+                </Text>
+              </View>
+              <View className="audio-call__status">
+                {isBusy ? (
+                  <ActivityIndicator size="small" color={colors.warning} />
+                ) : (
+                  <View className={`size-2 rounded-full ${statusInfo.dot}`} />
+                )}
+                <Text className="typography--caption ml-2 text-text-primary">
+                  {statusInfo.label}
+                </Text>
+              </View>
+            </View>
+
+            {error && <Text className="audio-call__error">{error}</Text>}
+
+            {startLabel && (
               <TouchableOpacity
                 activeOpacity={0.8}
+                accessibilityLabel={startLabel}
+                onPress={start}
+                className="practice-button mt-4"
+              >
+                <Text className="font-poppins-semibold text-h4 text-white">
+                  {startLabel}
+                </Text>
+              </TouchableOpacity>
+            )}
+          </View>
+
+          {/* Call controls */}
+          <View className="mt-5 flex-row">
+            <View
+              className={`audio-control ${isInCall ? "" : "audio-control--disabled"}`}
+            >
+              <TouchableOpacity
+                activeOpacity={0.8}
+                disabled={!isInCall}
                 accessibilityLabel={isMicOn ? "Mute mic" : "Unmute mic"}
-                onPress={() => setIsMicOn((value) => !value)}
+                onPress={toggleMic}
                 className={`audio-control__button ${isMicOn ? "" : "audio-control__button--off"}`}
               >
                 <Image
@@ -214,7 +316,9 @@ export default function AudioLessonScreen() {
                   style={{ width: 28, height: 28 }}
                 />
               </TouchableOpacity>
-              <Text className="audio-control__label">Mic</Text>
+              <Text className="audio-control__label">
+                {isInCall && !isMicOn ? "Unmute" : "Mic"}
+              </Text>
             </View>
 
             <View className="audio-control">
@@ -235,9 +339,12 @@ export default function AudioLessonScreen() {
               <Text className="audio-control__label">Subtitles</Text>
             </View>
 
-            <View className="audio-control">
+            <View
+              className={`audio-control ${status === "starting" ? "audio-control--disabled" : ""}`}
+            >
               <TouchableOpacity
                 activeOpacity={0.8}
+                disabled={status === "starting"}
                 accessibilityLabel="End call"
                 onPress={endCall}
                 className="audio-control__button audio-control__button--danger"
