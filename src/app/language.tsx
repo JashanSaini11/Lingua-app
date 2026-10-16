@@ -12,13 +12,15 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { images } from "@/constants/images";
-import { languages } from "@/data/languages";
+import { getLanguageByCode, languages } from "@/data/languages";
+import { useThemeColors } from "@/hooks/useThemeColors";
 import { posthog } from "@/lib/posthog";
 import { useLanguageStore } from "@/store/useLanguageStore";
 import type { LanguageCode } from "@/types/learning";
 
 export default function LanguageScreen() {
   const router = useRouter();
+  const theme = useThemeColors();
   const { width } = useWindowDimensions();
   const [search, setSearch] = useState("");
   const savedLanguage = useLanguageStore((state) => state.selectedLanguage);
@@ -46,12 +48,15 @@ export default function LanguageScreen() {
 
   const confirm = () => {
     setSelectedLanguage(selected);
-    posthog?.capture("language_selected", { language_code: selected });
+    posthog?.capture("language_selected", {
+      language_code: selected,
+      language_name: getLanguageByCode(selected)?.name ?? selected,
+    });
     goBack();
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#ffffff" }}>
+    <View style={{ flex: 1, backgroundColor: theme.background }}>
       <SafeAreaView edges={["top"]} style={{ flex: 1 }}>
         <ScrollView
           style={{ flex: 1 }}
@@ -69,6 +74,7 @@ export default function LanguageScreen() {
               >
                 <Image
                   source={images.chevronBack}
+                  tintColor={theme.textPrimary}
                   style={{ width: 26, height: 26 }}
                 />
               </TouchableOpacity>
@@ -81,6 +87,7 @@ export default function LanguageScreen() {
             <View className="mt-4 h-[52px] flex-row items-center rounded-full border border-border bg-surface px-5">
               <Image
                 source={images.search}
+                tintColor={theme.textSecondary}
                 style={{ width: 22, height: 22 }}
               />
               <TextInput
@@ -134,6 +141,7 @@ export default function LanguageScreen() {
                   ) : (
                     <Image
                       source={images.chevronForward}
+                      tintColor={theme.textSecondary}
                       style={{ width: 20, height: 20 }}
                     />
                   )}
@@ -159,11 +167,6 @@ export default function LanguageScreen() {
             </TouchableOpacity>
           </View>
         </ScrollView>
-
-        {/* The earth sits below the list, so it never covers the button.
-            The picture has empty space around it: it is made a little wider
-            than the screen and moved up so only the monuments and the top
-            of the globe show, like the design. */}
         <View
           pointerEvents="none"
           className="overflow-hidden"

@@ -11,7 +11,6 @@ const kinds: Record<
   { icon: ImageSourcePropType; tone: "purple" | "coral" }
 > = {
   lesson: { icon: images.tabLearn, tone: "purple" },
-  conversation: { icon: images.headphones, tone: "purple" },
   words: { icon: images.words, tone: "coral" },
 };
 
@@ -23,7 +22,7 @@ export function PlanItemRow({ item }: { item: PlanItem }) {
       <View className={`plan-item__icon plan-item__icon--${tone}`}>
         <Image
           source={icon}
-          tintColor={colors.background}
+          tintColor={colors.white}
           style={{ width: 24, height: 24 }}
         />
       </View>

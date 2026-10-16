@@ -1,7 +1,7 @@
 import { useUser } from "@clerk/expo";
 import { Image } from "expo-image";
 import { Redirect, useLocalSearchParams, useRouter } from "expo-router";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Platform,
@@ -23,15 +23,17 @@ import {
   type AgentStatus,
   type CallStatus,
 } from "@/hooks/useAudioLessonCall";
+import { useCurrentLesson } from "@/hooks/useCurrentLesson";
+import { useThemeColors } from "@/hooks/useThemeColors";
 import { useTeacherTranscript } from "@/hooks/useTeacherTranscript";
-import { useProgressStore } from "@/store/useProgressStore";
+import { posthog } from "@/lib/posthog";
+import { getCurrentStreak, useProgressStore } from "@/store/useProgressStore";
 
 // Where each bottom tab goes when it is pressed from this screen.
 const tabRoutes = {
   index: "/",
   learn: "/learn",
   "ai-teacher": "/ai-teacher",
-  chat: "/chat",
   profile: "/profile",
 } as const;
 
@@ -77,15 +79,25 @@ const startLabels: Partial<Record<CallStatus, string>> = {
   error: "Try again",
 };
 
-// AI Teacher audio lesson. Every lesson from the Learn screen opens here.
-// This is audio only: the teacher is shown as a picture and the learner talks
-// over a Stream audio call. There is no video.
+
+// After the teacher says the lesson is over, the call stays open this long so
+// the goodbye can finish playing before the call ends by itself.
+const AUTO_END_DELAY_MS = 6000;
+
+const getNow = () => Date.now();
+
+
 export default function AudioLessonScreen() {
   const router = useRouter();
-  const { id } = useLocalSearchParams<{ id: string }>();
+  // `tab` says which bottom tab opened this screen: the AI Teacher tab or Learn.
+  const { id, tab } = useLocalSearchParams<{ id: string; tab?: string }>();
   const lesson = getLessonById(id);
+  const currentLesson = useCurrentLesson();
+  const theme = useThemeColors();
   const completeLesson = useProgressStore((state) => state.completeLesson);
-  const streakDays = useProgressStore((state) => state.streakDays);
+  const streakDays = useProgressStore((state) =>
+    getCurrentStreak(state.streakDays, state.lastActiveDate),
+  );
   const completedLessonIds = useProgressStore(
     (state) => state.completedLessonIds,
   );
@@ -96,6 +108,7 @@ export default function AudioLessonScreen() {
     agentStatus,
     isMicOn,
     feedback,
+    isLessonOver,
     callId,
     error,
     start,
@@ -104,11 +117,84 @@ export default function AudioLessonScreen() {
     stopTalking,
     end,
   } = useAudioLessonCall(id);
-  const { teacherText } = useTeacherTranscript(callId);
+  const { teacherText, learnerText } = useTeacherTranscript(callId);
 
   const [lineIndex, setLineIndex] = useState(0);
-  // Set when a call ends: new XP, a repeat of a finished lesson, or too short.
   const [result, setResult] = useState<"xp" | "repeat" | "short" | undefined>();
+
+  const startedAtRef = useRef(0);
+  const lastLineIndexRef = useRef(0);
+  const isCompletedRef = useRef(false);
+  const isEndingRef = useRef(false);
+  // Always points to the latest endCall, so the auto end never uses old values.
+  const endCallRef = useRef<() => Promise<void>>(async () => {});
+  const lessonId = lesson?.id;
+  const lessonLanguageCode = lesson?.languageCode ?? null;
+  const lessonNumber = lesson?.order ?? null;
+
+  useEffect(() => {
+    lastLineIndexRef.current = lineIndex;
+  }, [lineIndex]);
+
+  useEffect(() => {
+    if (!lessonId) return;
+
+    startedAtRef.current = getNow();
+    isCompletedRef.current = false;
+    posthog?.capture("lesson_started", {
+      lesson_id: lessonId,
+      language: lessonLanguageCode,
+      lesson_number: lessonNumber,
+    });
+
+    // Leaving the screen before the lesson is completed counts as abandoned.
+    return () => {
+      if (isCompletedRef.current) return;
+      posthog?.capture("lesson_abandoned", {
+        lesson_id: lessonId,
+        time_into_lesson_seconds: Math.round(
+          (getNow() - startedAtRef.current) / 1000,
+        ),
+        last_question_index: lastLineIndexRef.current,
+      });
+    };
+  }, [lessonId, lessonLanguageCode, lessonNumber]);
+
+  const isInCall = status === "joined" || status === "reconnecting";
+
+  const endCall = async () => {
+    if (!isInCall) {
+      router.back();
+      return;
+    }
+    if (!lesson || isEndingRef.current) return;
+    isEndingRef.current = true;
+    const wasCompleted = completedLessonIds.includes(lesson.id);
+    const earned = await end();
+    if (earned) {
+      completeLesson(lesson.id, lesson.xpReward);
+      isCompletedRef.current = true;
+      posthog?.capture("lesson_completed", {
+        lesson_id: lesson.id,
+        language: lesson.languageCode,
+        lesson_number: lesson.order,
+        duration_seconds: Math.round((getNow() - startedAtRef.current) / 1000),
+        xp_earned: wasCompleted ? 0 : lesson.xpReward,
+      });
+    }
+    setResult(!earned ? "short" : wasCompleted ? "repeat" : "xp");
+  };
+
+  useEffect(() => {
+    endCallRef.current = endCall;
+  });
+
+  // The teacher finished the lesson: end the call for the learner.
+  useEffect(() => {
+    if (!isLessonOver) return;
+    const timer = setTimeout(() => endCallRef.current(), AUTO_END_DELAY_MS);
+    return () => clearTimeout(timer);
+  }, [isLessonOver]);
 
   const language = lesson ? getLanguageByCode(lesson.languageCode) : undefined;
   const userName =
@@ -131,34 +217,39 @@ export default function AudioLessonScreen() {
   ];
   const line = teacherLines[lineIndex];
 
+  // AI Teacher always means the lesson the learner is on. If this screen is
+  // already that tab, nothing happens, so a running call is not interrupted.
+  const onTabPress = (name: TabName) => {
+    if (name !== "ai-teacher") {
+      router.dismissTo(tabRoutes[name]);
+    } else if (tab !== "ai-teacher") {
+      if (currentLesson) {
+        router.replace({
+          pathname: "/lesson/[id]",
+          params: { id: currentLesson.id, tab: "ai-teacher" },
+        });
+      } else {
+        router.dismissTo(tabRoutes[name]);
+      }
+    }
+  };
+
   const nextLine = () => setLineIndex((lineIndex + 1) % teacherLines.length);
 
-  const isInCall = status === "joined" || status === "reconnecting";
   // While the teacher is talking, the bubble shows what it really says.
   // Before that (or if the transcript is unavailable) it shows the lesson phrases.
   const liveText = isInCall ? teacherText : undefined;
   const isBusy = status === "starting" || status === "connecting";
   const startLabel = startLabels[status];
   const statusInfo =
-    status === "joined" && isMicOn
-      ? { label: "Listening…", dot: "bg-success" }
-      : statusLabels[status];
-
-  // Ending a call that was running gives the XP, but only if the learner
-  // talked with the teacher for at least a minute.
-  // With no call running, the button just closes the screen.
-  const endCall = async () => {
-    if (!isInCall) {
-      router.back();
-      return;
-    }
-    const wasCompleted = completedLessonIds.includes(lesson.id);
-    const earned = await end();
-    if (earned) completeLesson(lesson.id, lesson.xpReward);
-    setResult(!earned ? "short" : wasCompleted ? "repeat" : "xp");
-  };
+    status === "joined" && isLessonOver
+      ? { label: "Lesson finished", dot: "bg-success" }
+      : status === "joined" && isMicOn
+        ? { label: "Listening…", dot: "bg-success" }
+        : statusLabels[status];
 
   const startCall = () => {
+    isEndingRef.current = false;
     setResult(undefined);
     start();
   };
@@ -167,7 +258,7 @@ export default function AudioLessonScreen() {
     isInCall && (agentStatus === "failed" || agentStatus === "left");
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.background }}>
+    <View style={{ flex: 1, backgroundColor: theme.background }}>
       <SafeAreaView edges={["top"]} style={{ flex: 1 }}>
         {/* Header: back, teacher status, streak, end call */}
         <View className="mt-2 h-14 flex-row items-center px-5">
@@ -178,6 +269,7 @@ export default function AudioLessonScreen() {
           >
             <Image
               source={images.chevronBack}
+              tintColor={theme.textPrimary}
               style={{ width: 26, height: 26 }}
             />
           </TouchableOpacity>
@@ -197,7 +289,7 @@ export default function AudioLessonScreen() {
           <View className="audio-pill">
             <Image
               source={images.headphones}
-              tintColor={colors.textPrimary}
+              tintColor={theme.textPrimary}
               style={{ width: 22, height: 22 }}
             />
           </View>
@@ -215,7 +307,7 @@ export default function AudioLessonScreen() {
           >
             <Image
               source={images.phoneHangup}
-              tintColor={colors.background}
+              tintColor={colors.white}
               style={{ width: 24, height: 24 }}
             />
           </TouchableOpacity>
@@ -232,7 +324,7 @@ export default function AudioLessonScreen() {
         >
           {/* Teacher card: lesson info on top, mascot in the middle, speech bubble below */}
           <View className="audio-card">
-            <View className="flex-row items-center rounded-2xl bg-white/90 p-3">
+            <View className="flex-row items-center rounded-2xl bg-card/90 p-3">
               <Image
                 source={{ uri: language.flagUrl }}
                 contentFit="cover"
@@ -265,11 +357,11 @@ export default function AudioLessonScreen() {
 
             <View className="mt-3">
               <View
-                className="absolute -top-1.5 right-1/4 size-5 rotate-45 bg-white"
+                className="absolute -top-1.5 right-1/4 size-5 rotate-45 bg-card"
                 style={styles.shadow}
               />
               <View
-                className="flex-row items-center rounded-3xl bg-white px-5 py-4"
+                className="flex-row items-center rounded-3xl bg-card px-5 py-4"
                 style={styles.shadow}
               >
                 <View className="flex-1">
@@ -357,6 +449,16 @@ export default function AudioLessonScreen() {
               </View>
             )}
 
+            {/* Live caption of what the learner says */}
+            {isInCall && learnerText && (
+              <Text
+                className="typography--body-sm mt-3 text-text-secondary"
+                numberOfLines={2}
+              >
+                You: {learnerText}
+              </Text>
+            )}
+
             {canRetryAgent && (
               <TouchableOpacity
                 activeOpacity={0.8}
@@ -410,7 +512,7 @@ export default function AudioLessonScreen() {
               >
                 <Image
                   source={images.mic}
-                  tintColor={colors.background}
+                  tintColor={colors.white}
                   style={{ width: 36, height: 36 }}
                 />
               </TouchableOpacity>
@@ -449,13 +551,18 @@ export default function AudioLessonScreen() {
               );
             })}
           </View>
+          {!feedback && (
+            <Text className="typography--caption mt-3 text-center text-text-secondary">
+              Your scores appear as you speak with your teacher.
+            </Text>
+          )}
         </ScrollView>
       </SafeAreaView>
 
-      {/* Learn stays highlighted because this lesson was opened from Learn. */}
+      {/* The tab that opened this lesson stays highlighted (Learn by default). */}
       <TabBarView
-        activeTab="learn"
-        onTabPress={(name: TabName) => router.dismissTo(tabRoutes[name])}
+        activeTab={tab === "ai-teacher" ? "ai-teacher" : "learn"}
+        onTabPress={onTabPress}
       />
     </View>
   );

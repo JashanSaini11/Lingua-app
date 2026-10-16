@@ -34,9 +34,13 @@ uv run agent.py serve   # HTTP server (GET /health, /ready)
   creates the call.
 - Each teacher has her own Gemini voice (`TEACHER_VOICES` in `agent.py`). Set `GEMINI_VOICE`
   to use one voice for everyone.
-- At the end of a lesson the teacher calls the `report_progress` tool with 1 to 5 scores for
-  speaking, pronunciation and grammar. They are saved in the call's custom data
-  (`feedback`) and shown on the lesson screen.
+- After each learner attempt the teacher silently calls the `report_progress` tool with its
+  current 1 to 5 scores for speaking, pronunciation and grammar. The newest scores are saved in
+  the call's custom data (`feedback`) and shown live on the lesson screen, so they exist even
+  when the learner ends the call early.
+- When every item is practiced, the teacher recaps, says goodbye and calls `finish_lesson`. That saves
+  the final scores and sets `lessonOver` in the call's custom data. The app then ends the call by
+  itself a few seconds later (so the goodbye can finish), and the learner gets the lesson XP.
 - Everything the teacher says is written to the Stream chat channel `messaging:{call_id}`.
   The Expo server adds the learner to that channel when it creates the call, and the lesson
   screen shows the teacher's latest message live in the speech bubble.

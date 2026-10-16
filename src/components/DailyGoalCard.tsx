@@ -15,7 +15,9 @@ export function DailyGoalCard({ xp, target }: DailyGoalCardProps) {
   return (
     <View className="home-card home-card--goal mt-6 h-[119px] flex-row items-center pl-5">
       <View className="flex-1">
-        <Text className="typography--body-md text-text-primary">Daily goal</Text>
+        <Text className="typography--body-md text-text-primary">
+          {xp >= target ? "Daily goal reached! 🎉" : "Daily goal"}
+        </Text>
 
         <View className="flex-row items-baseline">
           <Text className="typography--h1 text-text-primary">{xp}</Text>

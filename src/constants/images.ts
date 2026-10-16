@@ -1,6 +1,19 @@
 // Central place for every app image.
 // Always use images through this object: <Image source={images.mascotWelcome} />
 
+import flame from "@/assets/images/flame.svg";
+import zap from "@/assets/images/zap.svg";
+import bookOpen from "@/assets/images/book-open.svg";
+import circleCheck from "@/assets/images/circle-check.svg";
+import globe from "@/assets/images/globe.svg";
+import target from "@/assets/images/target.svg";
+import user from "@/assets/images/user.svg";
+import logOut from "@/assets/images/log-out.svg";
+import pencil from "@/assets/images/pencil.svg";
+import sun from "@/assets/images/sun.svg";
+import moon from "@/assets/images/moon.svg";
+import smartphone from "@/assets/images/smartphone.svg";
+import award from "@/assets/images/award.svg";
 import apple from "@/assets/images/apple.svg";
 import bell from "@/assets/images/bell.svg";
 import bookmark from "@/assets/images/bookmark.svg";
@@ -27,7 +40,6 @@ import sparkle from "@/assets/images/sparkle.svg";
 import sparkles from "@/assets/images/sparkles.svg";
 import streakFire from "@/assets/images/streak-fire.png";
 import tabAiTeacher from "@/assets/images/tab-ai-teacher.svg";
-import tabChat from "@/assets/images/tab-chat.svg";
 import tabHome from "@/assets/images/tab-home.svg";
 import tabLearn from "@/assets/images/tab-learn.svg";
 import tabProfile from "@/assets/images/tab-profile.svg";
@@ -36,6 +48,19 @@ import volume from "@/assets/images/volume.svg";
 import words from "@/assets/images/words.svg";
 
 export const images = {
+  flame,
+  zap,
+  bookOpen,
+  circleCheck,
+  globe,
+  target,
+  user,
+  logOut,
+  pencil,
+  sun,
+  moon,
+  smartphone,
+  award,
   apple,
   bell,
   bookmark,
@@ -62,7 +87,6 @@ export const images = {
   sparkles,
   streakFire,
   tabAiTeacher,
-  tabChat,
   tabHome,
   tabLearn,
   tabProfile,

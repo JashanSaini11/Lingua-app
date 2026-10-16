@@ -2,6 +2,7 @@ import { Image } from "expo-image";
 import { Text, TouchableOpacity, View } from "react-native";
 
 import { images } from "@/constants/images";
+import { useThemeColors } from "@/hooks/useThemeColors";
 import type { Lesson, LessonStatus } from "@/types/learning";
 
 type LessonCardProps = {
@@ -17,6 +18,7 @@ export function LessonCard({
   flagUrl,
   onPress,
 }: LessonCardProps) {
+  const theme = useThemeColors();
   const isInProgress = status === "in-progress";
 
   return (
@@ -66,7 +68,11 @@ export function LessonCard({
         </View>
       )}
       {status === "not-started" && (
-        <Image source={images.chevronForward} style={{ width: 20, height: 20 }} />
+        <Image
+          source={images.chevronForward}
+          tintColor={theme.textSecondary}
+          style={{ width: 20, height: 20 }}
+        />
       )}
     </TouchableOpacity>
   );

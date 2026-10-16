@@ -1,3 +1,5 @@
+import type { images } from "@/constants/images";
+
 // Types for the hardcoded learning content in `src/data/`.
 // Hierarchy: Language -> Unit -> Lesson -> (vocabulary, phrases, activities).
 
@@ -18,6 +20,7 @@ export type Unit = {
   id: string;
   languageCode: LanguageCode;
   order: number; // position inside the language path (1, 2, 3...)
+  level: string; // CEFR level shown on the home screen, e.g. "A1"
   title: string;
   emoji: string; // shown next to the unit title
   image: string; // picture at the top of the lessons screen
@@ -91,7 +94,7 @@ export type PracticeQuestion = {
 export type LessonStatus = "completed" | "in-progress" | "not-started";
 
 // One row of "Today's plan" on the home screen.
-export type PlanItemKind = "lesson" | "conversation" | "words";
+export type PlanItemKind = "lesson" | "words";
 
 export type PlanItem = {
   id: string;
@@ -118,4 +121,23 @@ export type Lesson = {
   phrases: Phrase[];
   activities: Activity[];
   aiTeacher: AiTeacherPrompt;
+};
+
+// What an achievement is measured against (see `lib/achievements.ts`).
+export type AchievementStat =
+  | "lessons" // lessons finished
+  | "practice" // practice sessions finished
+  | "streak" // days in a row with activity
+  | "words" // words learned
+  | "xp" // total XP earned
+  | "goal"; // 1 once today's daily goal is reached
+
+export type Achievement = {
+  id: string;
+  title: string; // "Word Collector"
+  description: string; // what to do, shown until it is earned
+  icon: keyof typeof images; // name of an icon in constants/images.ts
+  tint: "orange" | "purple" | "yellow" | "blue" | "green" | "red";
+  stat: AchievementStat;
+  target: number; // earned when the stat reaches this number
 };

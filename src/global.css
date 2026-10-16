@@ -22,12 +22,22 @@
   --color-error: #ff4d4f;
   --color-info: #4d8bff;
 
-  /* Neutrals */
+  /* Neutrals and soft tints: these change with the theme.
+     The light values are here, the dark ones are in the `:root` blocks below. */
   --color-text-primary: #0d132b;
   --color-text-secondary: #6b7280;
   --color-border: #e5e7eb;
   --color-surface: #f6f7fb;
   --color-background: #ffffff;
+  --color-card: #ffffff;
+  --color-profile-bg: #f8f7ff;
+  --color-tint-selected: #f5f3ff;
+  --color-tint-purple: #efecff;
+  --color-tint-orange: #fff1e0;
+  --color-tint-yellow: #fff6d6;
+  --color-tint-blue: #e6f0ff;
+  --color-tint-green: #e3f8ec;
+  --color-tint-red: #fdeeea;
 
   /* Speech bubbles (onboarding) */
   --color-bubble-blue: #eaf3ff;
@@ -67,6 +77,52 @@
   --text-body-sm--line-height: 1.6;
   --text-caption: 11px;
   --text-caption--line-height: 1.4;
+}
+
+/* ------------------------------------------------------------------
+   Theme values. `:root` is the light theme (the same values as `@theme`
+   above). The dark theme overrides them under the dark media query, which
+   follows the phone or the choice made with Appearance.setColorScheme()
+   (see store/useSettingsStore.ts).
+   ------------------------------------------------------------------ */
+:root {
+  --color-text-primary: #0d132b;
+  --color-text-secondary: #6b7280;
+  --color-border: #e5e7eb;
+  --color-surface: #f6f7fb;
+  --color-background: #ffffff;
+  --color-card: #ffffff;
+  --color-profile-bg: #f8f7ff;
+  --color-tint-selected: #f5f3ff;
+  --color-tint-purple: #efecff;
+  --color-tint-orange: #fff1e0;
+  --color-tint-yellow: #fff6d6;
+  --color-tint-blue: #e6f0ff;
+  --color-tint-green: #e3f8ec;
+  --color-tint-red: #fdeeea;
+  --color-goal-card: #fff3e6;
+  --color-goal-track: #fbe5cc;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-text-primary: #f3f4f8;
+    --color-text-secondary: #9aa3b5;
+    --color-border: #2a3250;
+    --color-surface: #1c2340;
+    --color-background: #0b1020;
+    --color-card: #151b30;
+    --color-profile-bg: #0b1020;
+    --color-tint-selected: #221d4d;
+    --color-tint-purple: #262052;
+    --color-tint-orange: #3a2412;
+    --color-tint-yellow: #38300f;
+    --color-tint-blue: #14284d;
+    --color-tint-green: #123424;
+    --color-tint-red: #3a1c1c;
+    --color-goal-card: #3a2a14;
+    --color-goal-track: #5a4220;
+  }
 }
 
 /* ------------------------------------------------------------------
@@ -115,11 +171,11 @@
    Modifier `--selected` is the purple highlighted card.
    ------------------------------------------------------------------ */
 .language-card {
-  @apply mb-3 h-[82px] flex-row items-center rounded-[20px] border border-border bg-white pl-4 pr-5;
+  @apply mb-3 h-[82px] flex-row items-center rounded-[20px] border border-border bg-card pl-4 pr-5;
 }
 
 .language-card--selected {
-  @apply border-lingua-purple bg-[#f5f3ff];
+  @apply border-lingua-purple bg-tint-selected;
 }
 
 /* ------------------------------------------------------------------
@@ -178,7 +234,7 @@
 }
 
 .lesson-tabs__tab--active {
-  @apply border border-b-[3px] border-border border-b-lingua-purple bg-white;
+  @apply border border-b-[3px] border-border border-b-lingua-purple bg-card;
 }
 
 /* ------------------------------------------------------------------
@@ -187,11 +243,11 @@
    Elements: `__check` (green completed circle) and `__image` (thumbnail).
    ------------------------------------------------------------------ */
 .lesson-card {
-  @apply mb-2.5 min-h-[80px] flex-row items-center rounded-2xl border border-border bg-white px-5 py-3.5;
+  @apply mb-2.5 min-h-[80px] flex-row items-center rounded-2xl border border-border bg-card px-5 py-3.5;
 }
 
 .lesson-card--in-progress {
-  @apply border-lingua-purple bg-[#f5f3ff];
+  @apply border-lingua-purple bg-tint-selected;
 }
 
 .lesson-card__check {
@@ -203,7 +259,7 @@
 }
 
 .lesson-card__badge {
-  @apply absolute -bottom-1 -right-1 size-[26px] items-center justify-center rounded-full border border-border bg-white;
+  @apply absolute -bottom-1 -right-1 size-[26px] items-center justify-center rounded-full border border-border bg-card;
 }
 
 /* ------------------------------------------------------------------
@@ -211,19 +267,19 @@
    Modifiers: `--selected`, `--correct`, `--wrong`.
    ------------------------------------------------------------------ */
 .practice-option {
-  @apply mb-3 min-h-[60px] justify-center rounded-2xl border-2 border-border bg-white px-5 py-3;
+  @apply mb-3 min-h-[60px] justify-center rounded-2xl border-2 border-border bg-card px-5 py-3;
 }
 
 .practice-option--selected {
-  @apply border-lingua-purple bg-[#f5f3ff];
+  @apply border-lingua-purple bg-tint-selected;
 }
 
 .practice-option--correct {
-  @apply border-success bg-[#e8f8ef];
+  @apply border-success bg-tint-green;
 }
 
 .practice-option--wrong {
-  @apply border-error bg-[#ffecec];
+  @apply border-error bg-tint-red;
 }
 
 .practice-button {
@@ -249,7 +305,7 @@
 }
 
 .audio-pill {
-  @apply h-11 min-w-11 items-center justify-center rounded-full border border-border bg-white;
+  @apply h-11 min-w-11 items-center justify-center rounded-full border border-border bg-card;
 }
 
 .audio-pill--danger {
@@ -261,7 +317,7 @@
 }
 
 .audio-talk__ring {
-  @apply size-[112px] items-center justify-center rounded-full bg-[#e5e5fe];
+  @apply size-[112px] items-center justify-center rounded-full bg-tint-purple;
 }
 
 .audio-talk__button {
@@ -273,7 +329,7 @@
 }
 
 .audio-talk__ring--active {
-  @apply bg-[#d3f5e2];
+  @apply bg-tint-green;
 }
 
 .audio-talk__button--active {
@@ -294,7 +350,7 @@
    `__agent` (AI teacher connection row), `__error` (error message).
    ------------------------------------------------------------------ */
 .audio-call {
-  @apply mt-4 rounded-3xl border border-border bg-white p-4;
+  @apply mt-4 rounded-3xl border border-border bg-card p-4;
 }
 
 .audio-call__user {
@@ -319,7 +375,7 @@
    Modifier `--divider` adds the line between columns.
    ------------------------------------------------------------------ */
 .audio-feedback {
-  @apply mt-5 flex-row rounded-3xl bg-white py-5;
+  @apply mt-5 flex-row rounded-3xl bg-card py-5;
 }
 
 .audio-feedback__item {
@@ -336,4 +392,96 @@
 
 .audio-feedback__value {
   @apply mt-1 font-poppins-medium text-h4;
+}
+
+/* ------------------------------------------------------------------
+   Profile (BEM): block `profile-card`, a rounded section on the screen.
+   Block `profile-stat`: one of the four numbers (streak, XP, ...).
+   Block `profile-row`: one settings row inside a `profile-card`.
+   Modifier `profile-row--divider` adds the line above every row but the first.
+   Block `profile-icon`: colored circle behind an icon, one modifier per color.
+   Block `profile-option`: a choice button (theme, daily goal).
+   Modifier `profile-option--active` is the selected one.
+   Block `profile-logout`: the red Log Out button.
+   ------------------------------------------------------------------ */
+.profile-card {
+  @apply rounded-[20px] border border-border bg-card;
+}
+
+.profile-stat {
+  @apply flex-1 flex-row items-center rounded-[20px] border border-border bg-card p-4;
+}
+
+.profile-row {
+  @apply min-h-[68px] flex-row items-center px-4 py-3;
+}
+
+.profile-row--divider {
+  @apply border-t border-border;
+}
+
+.profile-icon {
+  @apply items-center justify-center;
+}
+
+.profile-icon--orange {
+  @apply bg-tint-orange;
+}
+
+.profile-icon--purple {
+  @apply bg-tint-purple;
+}
+
+.profile-icon--yellow {
+  @apply bg-tint-yellow;
+}
+
+.profile-icon--blue {
+  @apply bg-tint-blue;
+}
+
+.profile-icon--green {
+  @apply bg-tint-green;
+}
+
+.profile-icon--red {
+  @apply bg-tint-red;
+}
+
+.profile-option {
+  @apply h-11 flex-1 flex-row items-center justify-center rounded-xl border border-border bg-surface;
+}
+
+.profile-option--active {
+  @apply border-lingua-deep-purple bg-lingua-deep-purple;
+}
+
+.profile-logout {
+  @apply mt-6 h-14 flex-row items-center justify-center rounded-2xl bg-tint-red;
+}
+
+/* ------------------------------------------------------------------
+   Home extras (BEM): modifier `home-card--plain` is a white card with a border.
+   Block `home-streak`: the flame and day count in the home header.
+   Block `week-day`: one circle of the week strip.
+   Modifiers `--done` (active day) and `--today` (today, not active yet).
+   ------------------------------------------------------------------ */
+.home-card--plain {
+  @apply border border-border bg-card;
+}
+
+.home-streak {
+  @apply h-9 flex-row items-center rounded-full bg-tint-orange pl-2 pr-3;
+}
+
+.week-day {
+  @apply size-9 items-center justify-center rounded-full border-2 border-border;
+}
+
+.week-day--done {
+  @apply border-streak bg-streak;
+}
+
+.week-day--today {
+  @apply border-lingua-deep-purple;
 }

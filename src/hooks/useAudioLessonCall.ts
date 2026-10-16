@@ -107,6 +107,8 @@ export function useAudioLessonCall(lessonId: string) {
   const [agentStatus, setAgentStatus] = useState<AgentStatus>("idle");
   const [isMicOn, setIsMicOn] = useState(false);
   const [feedback, setFeedback] = useState<LessonFeedback | undefined>();
+  // True when the teacher says the lesson is over (recap and goodbye are done).
+  const [isLessonOver, setIsLessonOver] = useState(false);
   // The id of the running call. The transcript hook uses it to find the chat channel.
   const [callId, setCallId] = useState<string | undefined>();
   const [error, setError] = useState<string | undefined>();
@@ -238,6 +240,7 @@ export function useAudioLessonCall(lessonId: string) {
     await leaveCall();
     setError(undefined);
     setFeedback(undefined);
+    setIsLessonOver(false);
     setAgentStatus("idle");
     agentConnectedAtRef.current = undefined;
     setStatus("starting");
@@ -275,10 +278,12 @@ export function useAudioLessonCall(lessonId: string) {
       const micSub = call.microphone.state.status$.subscribe((micStatus) =>
         setIsMicOn(micStatus === "enabled"),
       );
-      // The teacher saves its scores in the call's custom data at the end.
+      // The teacher saves its scores in the call's custom data while it teaches,
+      // and marks the lesson as over when it has said goodbye.
       const customSub = call.state.custom$.subscribe((custom) => {
         const scores = readFeedback(custom);
         if (scores) setFeedback(scores);
+        if (custom.lessonOver === true) setIsLessonOver(true);
       });
       stopListeningRef.current = () => {
         callingStateSub.unsubscribe();
@@ -380,6 +385,7 @@ export function useAudioLessonCall(lessonId: string) {
     agentStatus,
     isMicOn,
     feedback,
+    isLessonOver,
     callId,
     error,
     start,
