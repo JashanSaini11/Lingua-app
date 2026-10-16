@@ -1,6 +1,34 @@
-import { getLessonsByLanguage, getLessonsByUnit } from "@/data/lessons";
+import {
+  getLessonById,
+  getLessonsByLanguage,
+  getLessonsByUnit,
+} from "@/data/lessons";
 import { getUnitsByLanguage } from "@/data/units";
 import type { Language, Lesson, LessonStatus } from "@/types/learning";
+
+// The lesson the learner is on: the first one not finished yet. Falls back to
+// the first one when all are done, and is undefined for languages without lessons.
+export function getCurrentLesson(
+  language: Language,
+  completedLessonIds: string[],
+): Lesson | undefined {
+  const lessons = getLessonsByLanguage(language.code);
+  return (
+    lessons.find((lesson) => !completedLessonIds.includes(lesson.id)) ??
+    lessons[0]
+  );
+}
+
+// How many different words the learner has met. A word counts as known once
+// its lesson is completed.
+export function getKnownWordCount(completedLessonIds: string[]): number {
+  const words = new Set(
+    completedLessonIds.flatMap(
+      (id) => getLessonById(id)?.vocabulary.map((word) => word.id) ?? [],
+    ),
+  );
+  return words.size;
+}
 
 export type LessonWithStatus = { lesson: Lesson; status: LessonStatus };
 

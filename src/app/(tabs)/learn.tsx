@@ -9,6 +9,7 @@ import { PracticeTab } from "@/components/PracticeTab";
 import { images } from "@/constants/images";
 import { colors } from "@/constants/theme";
 import { getLanguageByCode } from "@/data/languages";
+import { useThemeColors } from "@/hooks/useThemeColors";
 import { getLearnContent } from "@/lib/learn";
 import { useLanguageStore } from "@/store/useLanguageStore";
 import { useProgressStore } from "@/store/useProgressStore";
@@ -17,6 +18,7 @@ type LearnTab = "lessons" | "practice";
 
 export default function LearnScreen() {
   const router = useRouter();
+  const theme = useThemeColors();
   const [tab, setTab] = useState<LearnTab>("lessons");
   const [isSaved, setIsSaved] = useState(false);
   const selectedLanguage = useLanguageStore((state) => state.selectedLanguage);
@@ -48,7 +50,7 @@ export default function LearnScreen() {
     return (
       <View
         className="items-center justify-center px-10"
-        style={{ flex: 1, backgroundColor: colors.background }}
+        style={{ flex: 1, backgroundColor: theme.background }}
       >
         <Image
           source={images.mascotWelcome}
@@ -68,7 +70,7 @@ export default function LearnScreen() {
   const { unit, items, completedCount } = content;
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.background }}>
+    <View style={{ flex: 1, backgroundColor: theme.background }}>
       <SafeAreaView edges={["top"]} style={{ flex: 1 }}>
         <ScrollView
           contentContainerStyle={{ paddingBottom: 24 }}
@@ -83,6 +85,7 @@ export default function LearnScreen() {
             >
               <Image
                 source={images.chevronBack}
+                tintColor={theme.textPrimary}
                 style={{ width: 26, height: 26 }}
               />
             </TouchableOpacity>
@@ -106,7 +109,7 @@ export default function LearnScreen() {
             >
               <Image
                 source={images.bookmark}
-                tintColor={isSaved ? colors.linguaPurple : colors.textPrimary}
+                tintColor={isSaved ? colors.linguaPurple : theme.textPrimary}
                 style={{ width: 26, height: 26 }}
               />
             </TouchableOpacity>

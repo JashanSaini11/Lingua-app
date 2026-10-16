@@ -7,6 +7,8 @@ type ContinueLearningCardProps = {
   languageName: string;
   level: string;
   unitNumber: number;
+  lessonNumber: number;
+  lessonTitle: string;
   onContinue: () => void;
 };
 
@@ -14,10 +16,12 @@ export function ContinueLearningCard({
   languageName,
   level,
   unitNumber,
+  lessonNumber,
+  lessonTitle,
   onContinue,
 }: ContinueLearningCardProps) {
   return (
-    <View className="home-card home-card--continue mt-5 h-[167px] justify-center pl-5">
+    <View className="home-card home-card--continue mt-5 min-h-[167px] justify-center py-5 pl-5">
       {/* The picture is bigger than the card and moved down and right,
           so the hill is cut by the card edge like the design. */}
       <View
@@ -31,11 +35,20 @@ export function ContinueLearningCard({
         />
       </View>
 
-      <Text className="typography--body-md text-white/90">Continue learning</Text>
-      <Text className="font-poppins-bold text-h3 text-white">{languageName}</Text>
-      <Text className="typography--body-md text-white/90">
-        {level} • Unit {unitNumber}
-      </Text>
+      {/* The right side is left free for the picture */}
+      <View className="pr-28">
+        <Text className="typography--body-md text-white/90">Continue learning</Text>
+        <Text className="font-poppins-bold text-h3 text-white">{languageName}</Text>
+        <Text className="typography--body-md text-white/90">
+          {level} • Unit {unitNumber}
+        </Text>
+        <Text
+          className="font-poppins-medium text-body-md text-white"
+          numberOfLines={1}
+        >
+          Lesson {lessonNumber}: {lessonTitle}
+        </Text>
+      </View>
 
       <TouchableOpacity
         activeOpacity={0.85}

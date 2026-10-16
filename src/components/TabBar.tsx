@@ -11,6 +11,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { images } from "@/constants/images";
 import { colors } from "@/constants/theme";
+import { useThemeColors } from "@/hooks/useThemeColors";
 
 const BAR_HEIGHT = 76;
 const CIRCLE_SIZE = 56;
@@ -20,7 +21,6 @@ const tabs = {
   index: { label: "Home", icon: images.tabHome },
   learn: { label: "Learn", icon: images.tabLearn },
   "ai-teacher": { label: "AI Teacher", icon: images.tabAiTeacher },
-  chat: { label: "Chat", icon: images.tabChat },
   profile: { label: "Profile", icon: images.tabProfile },
 } as const;
 
@@ -35,6 +35,7 @@ type TabBarViewProps = {
 // (like the audio lesson) can show the same bar.
 export function TabBarView({ activeTab, onTabPress }: TabBarViewProps) {
   const insets = useSafeAreaInsets();
+  const theme = useThemeColors();
   const [tabWidth, setTabWidth] = useState(0);
   const circleX = useSharedValue(0);
   const hasPlacedCircle = useRef(false);
@@ -60,11 +61,11 @@ export function TabBarView({ activeTab, onTabPress }: TabBarViewProps) {
 
   return (
     <View
-      className="bg-transparent px-3"
+      className="bg-background px-3"
       style={{ paddingBottom: Math.max(insets.bottom, 12) }}
     >
       <View
-        className="flex-row rounded-[28px] bg-white"
+        className="flex-row rounded-[28px] bg-card"
         style={[styles.bar, { height: BAR_HEIGHT }]}
         onLayout={(event) =>
           setTabWidth(event.nativeEvent.layout.width / tabNames.length)
@@ -90,7 +91,7 @@ export function TabBarView({ activeTab, onTabPress }: TabBarViewProps) {
             >
               <Image
                 source={tab.icon}
-                tintColor={isActive ? colors.background : colors.textSecondary}
+                tintColor={isActive ? colors.white : theme.textSecondary}
                 style={{ width: 26, height: 26 }}
               />
               {!isActive && (

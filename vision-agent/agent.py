@@ -130,7 +130,14 @@ HOW YOU TEACH
 - Adapt to the learner. If they struggle, slow down and break the word into smaller parts. If they're doing well, move on to the next item.
 - Ask only one question at a time, then stop and wait for their answer.
 - The learner uses push-to-talk, so they speak in short bursts and are silent in between. Never fill the silence or answer for them, just wait.
-- When all the lesson items are practiced, celebrate their progress, give a short recap, and then call the report_progress tool once with honest scores based on what you heard.
+- When all the lesson items are practiced, celebrate their progress, give a short recap of what they learned, and say a warm goodbye. Then call the finish_lesson tool, and say nothing more after that.
+
+SCORING THE LEARNER
+- The app shows the learner three live scores from 1 to 5, so score them honestly from what you actually hear. Do not give 5 by default and do not give 3 when you have no reason to.
+- speaking: how much they speak up and how confidently they try the words and phrases. pronunciation: how close their sounds are to the pronunciation guide. grammar: whether they use the words and phrases correctly.
+- Call the report_progress tool silently each time the learner finishes an attempt at a word or phrase, with your updated scores so far. Do this from their very first attempt and keep it up all lesson long, so the scores follow how they really speak. Never call it before they have spoken.
+- Never mention the tools, the scores or the numbers out loud. Just keep teaching as usual.
+- finish_lesson ends the call for the learner, so call it only once, only after every lesson item is practiced and your recap and goodbye are fully spoken. Never call it earlier, even if the learner says thanks or seems done, unless they clearly ask to stop.
 """
 
     learner_name = lesson.get("learnerName")
@@ -265,26 +272,54 @@ async def join_call(agent: Agent, call_type: str, call_id: str, **kwargs) -> Non
     agent.llm.set_instructions(agent.instructions)
     set_teacher_voice(agent.llm, lesson.get("teacherName", ""))
 
-    # The teacher calls this once at the end. The scores are stored in the call's
-    # custom data, and the app shows them on the lesson screen.
+    # Stores the scores in the call's custom data. The app shows them live on the
+    # lesson screen and watches `lessonOver` to end the call.
+    async def save_progress(
+        speaking: int, pronunciation: int, grammar: int, lesson_over: bool = False
+    ) -> None:
+        extra = {"lessonOver": True} if lesson_over else {}
+        custom = {
+            **lesson,
+            **extra,
+            "feedback": {
+                "speaking": clamp_score(speaking),
+                "pronunciation": clamp_score(pronunciation),
+                "grammar": clamp_score(grammar),
+            },
+        }
+        try:
+            await call.update(custom=custom)
+        except Exception:
+            logger.exception("Could not save the lesson feedback")
+
+    # The teacher calls this after each learner attempt, so the scores are already
+    # there even if the learner ends the call early. They are stored in the call's
+    # custom data, and the app shows them live on the lesson screen.
     @agent.llm.register_function(
         description=(
-            "Report how the learner did. Call this exactly once, at the very end of the "
-            "lesson, after your recap. Each score is a whole number from 1 (needs a lot "
-            "of practice) to 5 (excellent)."
+            "Report the learner's current scores, based on what you heard so far. Call it "
+            "silently after each of the learner's attempts, so the latest call always holds "
+            "the newest scores. Each score is a whole number from 1 (needs a lot of "
+            "practice) to 5 (excellent)."
         )
     )
     async def report_progress(speaking: int, pronunciation: int, grammar: int) -> dict:
         """speaking, pronunciation and grammar: whole numbers from 1 to 5."""
-        feedback = {
-            "speaking": clamp_score(speaking),
-            "pronunciation": clamp_score(pronunciation),
-            "grammar": clamp_score(grammar),
-        }
-        try:
-            await call.update(custom={**lesson, "feedback": feedback})
-        except Exception:
-            logger.exception("Could not save the lesson feedback")
+        await save_progress(speaking, pronunciation, grammar)
+        return {"saved": True}
+
+    # The teacher calls this once, after the recap and goodbye. The app then ends
+    # the call by itself, so the learner does not have to press End call.
+    @agent.llm.register_function(
+        description=(
+            "End the lesson. Call this exactly once, after every lesson item is practiced "
+            "and you have finished your recap and goodbye. Pass the final scores, each a "
+            "whole number from 1 (needs a lot of practice) to 5 (excellent)."
+        )
+    )
+    async def finish_lesson(speaking: int, pronunciation: int, grammar: int) -> dict:
+        """speaking, pronunciation and grammar: whole numbers from 1 to 5."""
+        await save_progress(speaking, pronunciation, grammar, lesson_over=True)
         return {"saved": True}
 
     async with agent.join(call):

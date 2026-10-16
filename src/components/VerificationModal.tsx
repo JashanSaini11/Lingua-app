@@ -11,6 +11,7 @@ import {
 } from "react-native";
 
 import { images } from "@/constants/images";
+import { useThemeColors } from "@/hooks/useThemeColors";
 
 const CODE_LENGTH = 6;
 
@@ -28,6 +29,7 @@ export function VerificationModal({
   onClose,
   onSubmit,
 }: VerificationModalProps) {
+  const theme = useThemeColors();
   const [code, setCode] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -72,7 +74,7 @@ export function VerificationModal({
         />
 
         <View
-          className="items-center rounded-[28px] bg-white px-6 pb-8 pt-9"
+          className="items-center rounded-[28px] bg-card px-6 pb-8 pt-9"
           style={{
             shadowColor: "#0d132b",
             shadowOpacity: 0.18,
@@ -88,7 +90,11 @@ export function VerificationModal({
             hitSlop={12}
             className="absolute right-4 top-4 size-9 items-center justify-center rounded-full bg-surface"
           >
-            <Image source={images.close} style={{ width: 16, height: 16 }} />
+            <Image
+              source={images.close}
+              tintColor={theme.textPrimary}
+              style={{ width: 16, height: 16 }}
+            />
           </TouchableOpacity>
 
           <View className="size-[72px] items-center justify-center rounded-full bg-bubble-indigo">
@@ -120,7 +126,7 @@ export function VerificationModal({
                     key={index}
                     className={`h-full w-[14.5%] items-center justify-center rounded-2xl border-[1.5px] ${
                       isActive
-                        ? "border-lingua-deep-purple bg-white"
+                        ? "border-lingua-deep-purple bg-card"
                         : digit
                           ? "border-bubble-indigo bg-bubble-indigo"
                           : "border-border bg-surface"

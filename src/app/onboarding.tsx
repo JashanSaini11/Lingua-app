@@ -5,10 +5,12 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { SpeechBubble } from "@/components/SpeechBubble";
 import { images } from "@/constants/images";
+import { useThemeColors } from "@/hooks/useThemeColors";
 import { posthog } from "@/lib/posthog";
 
 export default function Onboarding() {
   const router = useRouter();
+  const theme = useThemeColors();
   // Size of the area reserved for the mascot (measured on layout).
   const [stage, setStage] = useState({ width: 0, height: 0 });
 
@@ -18,7 +20,7 @@ export default function Onboarding() {
   const mascotSize = Math.min(stage.width * 1.35, stage.height * 1.10);
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "#ffffff" }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
       <View className="flex-1 px-6 pb-6 pt-3">
         {/* Logo */}
         <View className="flex-row items-center justify-center">

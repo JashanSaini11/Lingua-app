@@ -15,6 +15,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { VerificationModal } from "@/components/VerificationModal";
 import { images } from "@/constants/images";
 import { type AuthMode, useAuthFlow } from "@/hooks/useAuthFlow";
+import { useThemeColors } from "@/hooks/useThemeColors";
 
 // Only the copy changes between the two screens.
 const copy = {
@@ -47,13 +48,14 @@ const MASCOT_OFFSET_RATIO = 0.135; // how far the picture is pulled up
 const MASCOT_VISIBLE_RATIO = 0.612; // how much of the picture height is shown
 
 const inputCardClass =
-  "h-[78px] rounded-[20px] border border-border bg-white px-[18px] pt-[14px]";
+  "h-[78px] rounded-[20px] border border-border bg-card px-[18px] pt-[14px]";
 // Poppins is a tall font: the input needs enough height or the text is cut off.
 const inputClass = "mt-0.5 h-[34px] p-0 font-poppins-medium text-[16px]";
 
 export function AuthScreen({ mode }: { mode: AuthMode }) {
   const router = useRouter();
   const { width } = useWindowDimensions();
+  const theme = useThemeColors();
   const text = copy[mode];
   const { loading, start, verify, signInWithSocial } = useAuthFlow(mode);
 
@@ -85,7 +87,7 @@ export function AuthScreen({ mode }: { mode: AuthMode }) {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "#ffffff" }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
       <KeyboardAvoidingView
         behavior={process.env.EXPO_OS === "ios" ? "padding" : undefined}
         style={{ flex: 1 }}
@@ -104,6 +106,7 @@ export function AuthScreen({ mode }: { mode: AuthMode }) {
             >
               <Image
                 source={images.chevronBack}
+                tintColor={theme.textPrimary}
                 style={{ width: 26, height: 26 }}
               />
             </TouchableOpacity>
@@ -202,6 +205,7 @@ export function AuthScreen({ mode }: { mode: AuthMode }) {
                 >
                   <Image
                     source={showPassword ? images.eyeOff : images.eye}
+                    tintColor={theme.textSecondary}
                     style={{ width: 24, height: 24 }}
                   />
                 </TouchableOpacity>
@@ -237,10 +241,12 @@ export function AuthScreen({ mode }: { mode: AuthMode }) {
                   activeOpacity={0.7}
                   onPress={() => signInWithSocial(provider.strategy)}
                   disabled={loading}
-                  className="h-14 flex-row items-center rounded-[18px] border border-border bg-white pl-[39px]"
+                  className="h-14 flex-row items-center rounded-[18px] border border-border bg-card pl-[39px]"
                 >
                   <Image
                     source={provider.icon}
+                    // The Apple logo is black, so it follows the theme.
+                    tintColor={provider.name === "Apple" ? theme.textPrimary : undefined}
                     style={{ width: 26, height: 26 }}
                   />
                   <Text className="ml-8 font-poppins-medium text-[15px] text-text-primary">

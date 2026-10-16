@@ -4,10 +4,10 @@ import { StreamChat, type Channel } from "stream-chat";
 
 import { fetchStreamToken, streamApiKey } from "@/lib/stream";
 
-// Live text of what the AI teacher is saying.
-// The Vision Agent writes every sentence it speaks to the Stream chat channel
-// that has the same id as the call. We watch that channel and keep the latest
-// teacher message, which grows while the teacher is still talking.
+// Live captions of the lesson: what the AI teacher says and what the learner says.
+// The Vision Agent writes both to the Stream chat channel that has the same id
+// as the call. We watch that channel and keep the latest message of each side,
+// which grows while that person is still talking.
 export function useTeacherTranscript(callId: string | undefined) {
   const { getToken } = useAuth();
   const { user } = useUser();
@@ -25,7 +25,8 @@ export function useTeacherTranscript(callId: string | undefined) {
   // is never shown in a new one.
   const [transcript, setTranscript] = useState<{
     callId: string;
-    text: string | undefined;
+    teacherText: string | undefined;
+    learnerText: string | undefined;
   }>();
 
   useEffect(() => {
@@ -36,12 +37,17 @@ export function useTeacherTranscript(callId: string | undefined) {
 
     // The channel only has two members: the learner and the teacher.
     // Everything that is not from the learner is the teacher.
-    const readLatestTeacherText = () => {
-      const messages = channel?.state.messages ?? [];
-      const latest = messages.findLast(
-        (message) => message.user?.id !== userId && message.text,
+    const readLatestTexts = () => {
+      const messages = (channel?.state.messages ?? []).filter(
+        (message) => message.text,
       );
-      setTranscript({ callId, text: latest?.text });
+      setTranscript({
+        callId,
+        teacherText: messages.findLast((message) => message.user?.id !== userId)
+          ?.text,
+        learnerText: messages.findLast((message) => message.user?.id === userId)
+          ?.text,
+      });
     };
 
     const connect = async () => {
@@ -62,9 +68,9 @@ export function useTeacherTranscript(callId: string | undefined) {
           return;
         }
 
-        readLatestTeacherText();
-        channel.on("message.new", readLatestTeacherText);
-        channel.on("message.updated", readLatestTeacherText);
+        readLatestTexts();
+        channel.on("message.new", readLatestTexts);
+        channel.on("message.updated", readLatestTexts);
       } catch (transcriptError) {
         // The transcript is a bonus. The lesson works without it.
         console.error("Live transcript failed", transcriptError);
@@ -74,14 +80,15 @@ export function useTeacherTranscript(callId: string | undefined) {
 
     return () => {
       cancelled = true;
-      channel?.off("message.new", readLatestTeacherText);
-      channel?.off("message.updated", readLatestTeacherText);
+      channel?.off("message.new", readLatestTexts);
+      channel?.off("message.updated", readLatestTexts);
       channel?.stopWatching().catch(() => undefined);
     };
   }, [callId, userId]);
 
+  const current = transcript?.callId === callId ? transcript : undefined;
   return {
-    teacherText:
-      transcript && transcript.callId === callId ? transcript.text : undefined,
+    teacherText: current?.teacherText,
+    learnerText: current?.learnerText,
   };
 }

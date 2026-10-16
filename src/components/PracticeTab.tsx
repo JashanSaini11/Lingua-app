@@ -22,7 +22,7 @@ export function PracticeTab({ unitId, languageCode }: PracticeTabProps) {
   const [selected, setSelected] = useState<string | null>(null);
   const [correctCount, setCorrectCount] = useState(0);
 
-  const addXp = useProgressStore((state) => state.addXp);
+  const completePractice = useProgressStore((state) => state.completePractice);
   const sessionsCompleted = usePracticeStore((state) => state.sessionsCompleted);
   const bestScore = usePracticeStore((state) => state.bestScores[unitId]);
   const recordSession = usePracticeStore((state) => state.recordSession);
@@ -59,7 +59,7 @@ export function PracticeTab({ unitId, languageCode }: PracticeTabProps) {
       setSelected(null);
       return;
     }
-    addXp(correctCount * XP_PER_CORRECT_ANSWER);
+    completePractice(correctCount * XP_PER_CORRECT_ANSWER);
     recordSession(unitId, correctCount, questions.length);
     setPhase("result");
   };
@@ -199,7 +199,7 @@ export function PracticeTab({ unitId, languageCode }: PracticeTabProps) {
         </Text>
 
         <View className="mt-4 flex-row gap-3">
-          <View className="items-center rounded-2xl bg-white px-5 py-2">
+          <View className="items-center rounded-2xl bg-card px-5 py-2">
             <Text
               className="font-poppins-bold text-h4 text-lingua-deep-purple"
             >
@@ -209,7 +209,7 @@ export function PracticeTab({ unitId, languageCode }: PracticeTabProps) {
               Best score
             </Text>
           </View>
-          <View className="items-center rounded-2xl bg-white px-5 py-2">
+          <View className="items-center rounded-2xl bg-card px-5 py-2">
             <Text
               className="font-poppins-bold text-h4 text-lingua-deep-purple"
             >
